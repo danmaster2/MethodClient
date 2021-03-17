@@ -27,7 +27,7 @@ public class TotemPop extends Module {
 
 
     public TotemPop() {
-        super("TotemPop", Keyboard.KEY_NONE, Category.COMBAT, "TotemPop");
+        super("TotemPopCounter", Keyboard.KEY_NONE, Category.COMBAT, "Notifies when someone popped a totem");
     }
 
 
