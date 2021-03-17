@@ -177,7 +177,7 @@ public class ClickGui extends GuiScreen {
             }
         }
         if (textbox.isFocused() && keyCode == 28 && Trycommand) {
-            CommandManager.getInstance().runCommands("." + textbox.getText());
+            CommandManager.getInstance().runCommands(CommandManager.cmdPrefix + textbox.getText());
             mc.displayGuiScreen(null);
         }
     }

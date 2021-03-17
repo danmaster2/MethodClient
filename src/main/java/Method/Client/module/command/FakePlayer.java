@@ -18,7 +18,6 @@ public class FakePlayer extends Command {
             fake.setPosition(mc.player.posX,mc.player.posY,mc.player.posZ);
             mc.world.loadedEntityList.add(fake);
 
-
             ChatUtils.message("Added Fake Player ");
         } catch (Exception e) {
             ChatUtils.error("Usage: " + getSyntax());

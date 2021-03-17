@@ -146,6 +146,18 @@ public class EventsHandler {
         }
     }
 
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void PlayerRespawnEvent(PlayerEvent.PlayerRespawnEvent event) {
+        if (!isInit) {
+            return;
+        }
+        try {
+            ModuleManager.PlayerRespawnEvent(event);
+        } catch (RuntimeException ex) {
+            cow("PlayerRespawnEvent", ex);
+        }
+    }
+
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void BackgroundDrawnEvent(GuiScreenEvent.BackgroundDrawnEvent event) {

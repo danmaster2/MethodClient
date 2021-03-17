@@ -12,6 +12,7 @@ import net.minecraftforge.event.entity.player.*;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.GetCollisionBoxesEvent;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.util.ArrayList;
@@ -324,5 +325,8 @@ public class Module {
     }
 
     public void GuiOpen(GuiOpenEvent event) {
+    }
+
+    public void PlayerRespawnEvent(PlayerEvent.PlayerRespawnEvent event) {
     }
 }

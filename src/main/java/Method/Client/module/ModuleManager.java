@@ -19,6 +19,7 @@ import net.minecraftforge.event.entity.player.*;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.GetCollisionBoxesEvent;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.util.ArrayList;
@@ -579,10 +580,15 @@ public class ModuleManager {
             m.GuiOpen(event);
         }
     }
+    public static void PlayerRespawnEvent(PlayerEvent.PlayerRespawnEvent event) {
+        for (Module m : toggledModules) {
+            m.PlayerRespawnEvent(event);
+        }
+    }
 
     public static void ClientChatEvent(ClientChatEvent event) {
-        if (event.getMessage().startsWith("@")) {
-            CommandManager.getInstance().runCommands("." + event.getMessage().substring(1));
+        if (event.getMessage().startsWith(String.valueOf(CommandManager.cmdPrefix))) {
+            CommandManager.getInstance().runCommands(CommandManager.cmdPrefix + event.getMessage().substring(1));
             event.setCanceled(true);
             event.setMessage(null);
         }
@@ -634,6 +640,7 @@ public class ModuleManager {
         return list;
 
     }
+
 
 
 }

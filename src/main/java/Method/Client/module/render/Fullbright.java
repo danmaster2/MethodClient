@@ -3,8 +3,11 @@ package Method.Client.module.render;
 import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
+import Method.Client.utils.visual.ChatUtils;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 
 import java.util.Objects;
@@ -20,6 +23,13 @@ public class Fullbright extends Module {
     }
 
     Setting mode = setmgr.add(new Setting("Mode", this, "Potion", "Gamma", "Potion"));
+
+
+    @Override
+    public void PlayerRespawnEvent(PlayerEvent.PlayerRespawnEvent event) {
+        PotionEffect nv = new PotionEffect(Objects.requireNonNull(Potion.getPotionById(16)), 9999999, 3);
+        mc.player.addPotionEffect(nv);
+    }
 
 
     @Override

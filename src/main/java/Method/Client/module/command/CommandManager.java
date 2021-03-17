@@ -9,7 +9,7 @@ public class CommandManager {
     public static ArrayList<Command> commands = new ArrayList<Command>();
     private volatile static CommandManager instance;
 
-    public static char cmdPrefix = '.';
+    public static char cmdPrefix = '@';
 
     public CommandManager() {
         addCommands();
@@ -23,6 +23,7 @@ public class CommandManager {
         commands.add(new FakePlayer());
         commands.add(new UsernameHistory());
         commands.add(new Say());
+        commands.add(new PrefixChange());
         commands.add(new OpenGui());
         commands.add(new Effect());
         commands.add(new PlayerFinder());

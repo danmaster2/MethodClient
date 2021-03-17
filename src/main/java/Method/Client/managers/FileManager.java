@@ -6,6 +6,7 @@ import Method.Client.module.Category;
 import Method.Client.module.Module;
 import Method.Client.module.ModuleManager;
 import Method.Client.module.Profiles.Profiletem;
+import Method.Client.module.command.CommandManager;
 import Method.Client.utils.Screens.Custom.Search.SearchGuiSettings;
 import Method.Client.utils.Screens.Custom.Xray.XrayGuiSettings;
 import Method.Client.utils.system.Wrapper;
@@ -171,7 +172,9 @@ public class FileManager {
             JsonObject json = new JsonObject();
 
             ModuleManager.getModules().forEach(module -> Save(json, module));
-
+            JsonObject JsonMod = new JsonObject();
+            JsonMod.addProperty("PREFIX", CommandManager.cmdPrefix);
+            json.add("PREFIX", JsonMod);
             PrintWriter saveJson = new PrintWriter(new FileWriter(Mods));
             saveJson.println(gsonPretty.toJson(json));
             saveJson.close();
@@ -214,8 +217,14 @@ public class FileManager {
 
             for (Map.Entry<String, JsonElement> entry : moduleJason.entrySet()) {
                 Module mods = ModuleManager.getModuleByName(entry.getKey());
+                if (entry.getKey().equals("PREFIX")) {
+                    JsonObject jsonMod = (JsonObject) entry.getValue();
+                    CommandManager.cmdPrefix = jsonMod.get("PREFIX").getAsCharacter();
+                }
+
                 Load(entry, mods);
             }
+
 
         } catch (NullPointerException | IOException e) {
             e.printStackTrace();
