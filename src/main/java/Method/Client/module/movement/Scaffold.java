@@ -47,7 +47,7 @@ public class Scaffold extends Module {
     Setting Towerspeed = setmgr.add(new Setting("Towerspeed", this, 1, 0, 1, false, Towermode, "Tower", 8));
     Setting TowerDelay = setmgr.add(new Setting("TowerDelay", this, 100, 0, 1000, true, Towermode, "Tower", 9));
     Setting TowerFeet = setmgr.add(new Setting("Tower Feet Look", this, true));
-    Setting SneakPlace = setmgr.add(new Setting("SneakPlace", this, false));
+    Setting SneakPlace = setmgr.add(new Setting("SneakPlace", this, true));
     Setting DrawMode = setmgr.add(new Setting("Hole Mode", this, "Outline", BlockEspOptions()));
     Setting LineWidth = setmgr.add(new Setting("LineWidth", this, 1, 0, 3, false));
 

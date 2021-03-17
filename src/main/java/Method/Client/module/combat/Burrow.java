@@ -4,13 +4,16 @@ package Method.Client.module.combat;
 import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
+import Method.Client.utils.BlockUtils;
 import Method.Client.utils.TimerUtils;
 import Method.Client.utils.Utils;
 import Method.Client.utils.visual.ChatUtils;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockEnderChest;
 import net.minecraft.block.BlockObsidian;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.client.*;
@@ -42,27 +45,27 @@ public class Burrow extends Module {
         super("Burrow", Keyboard.KEY_NONE, Category.COMBAT, "Burrow into hole");
     }
 
-    private int find_in_Inventory() {
-        for (int i = 0; i < 44; ++i) {
-            final ItemStack stack = MC.player.inventoryContainer.getSlot(i).getStack();
+    private int find_obi_in_hotbar() {
+        for (int i = 0; i < 9; ++i) {
+            final ItemStack stack = mc.player.inventory.getStackInSlot(i);
             if (stack != ItemStack.EMPTY && stack.getItem() instanceof ItemBlock) {
                 final Block block = ((ItemBlock) stack.getItem()).getBlock();
-                if (block instanceof BlockObsidian)
+                 if (block instanceof BlockObsidian)
                     return i;
+
             }
         }
         return -1;
     }
-
     @Override
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (this.timer.isDelay((long) this.delay.getValDouble())) {
-            if (find_in_Inventory() > 0) {
+            if (find_obi_in_hotbar() !=-1) {
                 // get our hand swap context and ensure we have obsidian
 
                 int current = mc.player.inventory.currentItem;
-                mc.player.connection.sendPacket(new CPacketHeldItemChange(find_in_Inventory()));
-                mc.player.inventory.currentItem = find_in_Inventory();
+                mc.player.connection.sendPacket(new CPacketHeldItemChange(find_obi_in_hotbar()));
+                mc.player.inventory.currentItem = find_obi_in_hotbar();
                 final BlockPos positionToPlaceAt = new BlockPos(mc.player.getPositionVector()).down();
                 if (this.place(positionToPlaceAt, mc)) { // we've attempted to place the block
                     if (this.OffGround.getValBoolean()) {
@@ -91,7 +94,7 @@ public class Burrow extends Module {
     @Override
     public void onEnable() {
         if (mc.player != null) {
-            if (find_in_Inventory() > 0) {
+            if (find_obi_in_hotbar() !=-1) {
                 // attempt to center
                 if (Center.getValBoolean()) {
                     if (CenterBypass.getValBoolean()) {

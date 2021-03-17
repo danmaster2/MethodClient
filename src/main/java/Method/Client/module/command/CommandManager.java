@@ -20,6 +20,7 @@ public class CommandManager {
         commands.add(new VClip());
         commands.add(new OpenFolder());
         commands.add(new Login());
+        commands.add(new FakePlayer());
         commands.add(new UsernameHistory());
         commands.add(new Say());
         commands.add(new OpenGui());
