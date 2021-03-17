@@ -1,0 +1,16 @@
+[
+{
+  "modid": "method",
+  "name": "methodcode",
+  "description": "Method is a Collection of code",
+  "version": "0.1.0",
+  "mcversion": "${mcversion}",
+  "url": "www.method.com",
+  "updateUrl": "www.method.com",
+  "authorList": ["J"],
+  "credits": "J",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
