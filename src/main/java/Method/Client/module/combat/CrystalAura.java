@@ -52,8 +52,8 @@ public class CrystalAura extends Module {
     public Setting range = setmgr.add(new Setting("Hit Range", this, 6, 0, 8, false));
     public Setting Explode = setmgr.add(new Setting("Explode", this, true));
     public Setting Placer = setmgr.add(new Setting("Place Crystals", this, true));
-    public Setting Damage = setmgr.add(new Setting("Max Self Dmg", this, 8, 0, 20, false));
-    public Setting OtherDamage = setmgr.add(new Setting("Min Enemy Dmg", this, 8, 0, 20, false));
+    public Setting Damage = setmgr.add(new Setting("Max Self Dmg", this, 14, 0, 20, false));
+    public Setting OtherDamage = setmgr.add(new Setting("Min Enemy Dmg", this, 4, 0, 20, false));
     public Setting HitDelayBetween = setmgr.add(new Setting("Hit Delay", this, .2, 0, 1, false));
     public Setting PlaceDelayBetween = setmgr.add(new Setting("Place Delay", this, .2, 0, 1, false));
     public Setting FastSwitch = setmgr.add(new Setting("Fast Switch", this, true));
@@ -100,34 +100,28 @@ public class CrystalAura extends Module {
                                     if (MultiPlace.getValBoolean())
                                         Collections.shuffle(Crystals);
                                     for (EntityEnderCrystal crystal : Crystals)
-                                        if (playerMP.getDistance(crystal) < 12 && crystal.getDistance(mc.player) <= range.getValDouble())
-                                            if ((Calculate_Damage(crystal.posX, crystal.posY, crystal.posZ, mc.player) < Damage.getValDouble()))
-                                                if ((Calculate_Damage(crystal.posX, crystal.posY, crystal.posZ, playerMP) > OtherDamage.getValDouble()))
-                                                    processAttack(crystal);
+                                        if (mc.player.canEntityBeSeen(crystal))
+                                            if (playerMP.getDistance(crystal) < 12 && crystal.getDistance(mc.player) <= range.getValDouble())
+                                                if ((Calculate_Damage(crystal.posX, crystal.posY, crystal.posZ, mc.player) < Damage.getValDouble()))
+                                                    if ((Calculate_Damage(crystal.posX, crystal.posY, crystal.posZ, playerMP) > OtherDamage.getValDouble()))
+                                                        processAttack(crystal);
 
                                 }
-                                if (Placer.getValBoolean()) {
-                                    ArrayList<BlockPos> posable = new ArrayList<>();
-                                    if (mc.player.getDistance(playerMP) < 13)
-                                        for (int x = (int) playerMP.posX - 8; x <= (int) playerMP.posX + 8; ++x)
-                                            for (int z = (int) playerMP.posZ - 8; z <= (int) playerMP.posZ + 8; ++z)
-                                                for (int y = (int) playerMP.posY - 4; y <= (int) playerMP.posY + 3; ++y) {
-                                                    BlockPos blockPos = new BlockPos(x, y, z);
-                                                    if (canPlaceCrystal(blockPos))
-                                                        posable.add(blockPos);
-                                                }
-                                    double[] Best = new double[]{-1.0D, -1.0D};
-                                    for (int i = 0; i < posable.size(); i++)
-                                        if ((Calculate_Damage(posable.get(i).x + .5, posable.get(i).y + 1, posable.get(i).z + .5, mc.player) < Damage.getValDouble())) {
-                                            double other = (Calculate_Damage(posable.get(i).x + .5, posable.get(i).y + 1, posable.get(i).z + .5, playerMP));
-                                            if (other > OtherDamage.getValDouble() && other > Best[1]) {
-                                                Best[0] = i;
-                                                Best[1] = other;
-                                            }
-                                        }
-                                    if (Best[0] != -1)
-                                        placeCrystalOnBlock(posable.get((int) Best[0]), Best[1]);
-                                }
+                                if (placeTimer.isDelay((long) (PlaceDelayBetween.getValDouble() * 1000)))
+                                    if (Placer.getValBoolean()) {
+                                        ArrayList<BlockPos> posable = new ArrayList<>();
+                                        if (mc.player.getDistance(playerMP) < 13)
+                                            for (int x = (int) playerMP.posX - 8; x <= (int) playerMP.posX + 8; ++x)
+                                                for (int z = (int) playerMP.posZ - 8; z <= (int) playerMP.posZ + 8; ++z)
+                                                    for (int y = (int) playerMP.posY - 4; y <= (int) playerMP.posY + 3; ++y) {
+                                                        BlockPos blockPos = new BlockPos(x, y, z);
+                                                        if (canPlaceCrystal(blockPos))
+                                                            if ((Calculate_Damage(blockPos.x + .5, blockPos.y + 1, blockPos.z + .5, mc.player) < Damage.getValDouble()))
+                                                                if ((Calculate_Damage(blockPos.x + .5, blockPos.y + 1, blockPos.z + .5, playerMP)) > OtherDamage.getValDouble())
+                                                                    posable.add(blockPos);
+                                                    }
+                                        placeCrystalOnBlock(posable, playerMP);
+                                    }
                             }
                     }
             );
@@ -183,10 +177,20 @@ public class CrystalAura extends Module {
         return true;
     }
 
-    public void placeCrystalOnBlock(final BlockPos pos, double v) {
-        if (placeTimer.isDelay((long) (PlaceDelayBetween.getValDouble() * 1000))) {
-            RayTraceResult result = mc.world.rayTraceBlocks(Utils.getEyesPos(), new Vec3d(pos.getX() + 0.5, pos.getY() - 0.5, pos.getZ() + 0.5));
-            EnumFacing facing = (result == null || result.sideHit == null) ? EnumFacing.UP : result.sideHit;
+    public void placeCrystalOnBlock(ArrayList<BlockPos> finalcheck, EntityOtherPlayerMP playerMP) {
+        for (BlockPos pos : finalcheck) {
+            RayTraceResult result = mc.world.rayTraceBlocks(mc.player.getPositionEyes(1f), new Vec3d(pos.getX() + .5, pos.getY() - .5, pos.getZ() + .5));
+            EnumFacing facing;
+            if ((result == null) || result.sideHit == null)
+                facing = EnumFacing.UP;
+            else facing = result.sideHit;
+            if (mc.player.posY + mc.player.eyeHeight < pos.z && facing == EnumFacing.UP)
+                continue;
+            assert result != null;
+            if (result.getBlockPos().distanceSq(pos) > 2)
+                continue;
+            if (mc.player.eyeHeight + mc.player.posY < pos.y && facing.equals(EnumFacing.UP))
+                continue;
             placeTimer.setLastMS();
             if (!mc.player.getHeldItemMainhand().getItem().equals(Items.END_CRYSTAL) && (Hand.getValString().equalsIgnoreCase("Mainhand") && FastSwitch.getValBoolean()))
                 if (find_in_hotbar(Items.END_CRYSTAL) != -1) {
@@ -203,11 +207,14 @@ public class CrystalAura extends Module {
                 hand = EnumHand.MAIN_HAND;
             if (hand != null) {
                 if (SpoofAngle.getValBoolean()) {
-                    Rots = Utils.getNeededRotations(new Vec3d(pos.x + .5, pos.y + .5, pos.z + .5), 0, 0);
-                    Wrapper.mc.player.connection.sendPacket(new CPacketPlayer.Rotation(Rots[0], Rots[1], Wrapper.mc.player.onGround));
+                    Rots = Utils.getNeededRotations(new Vec3d(pos.x + .5, pos.y + ((facing == EnumFacing.UP) ? +1 : +.5), pos.z + .5), 0, 0);
+                    mc.player.rotationYaw = Rots[0];
+                    mc.player.rotationPitch = Rots[1];
+                    //  Wrapper.mc.player.connection.sendPacket(new CPacketPlayer.Rotation(Rots[0], Rots[1], Wrapper.mc.player.onGround));
                 }
                 mc.player.connection.sendPacket(new CPacketPlayerTryUseItemOnBlock(pos, facing, hand, .5f, 0.5f, 0.5f));
-                placeLocations.add(new PlaceLocation(pos.x, pos.y, pos.z, v));
+                placeLocations.add(new PlaceLocation(pos.x, pos.y, pos.z, (Calculate_Damage(pos.x + .5, pos.y + 1, pos.z + .5, playerMP))));
+                break;
             }
         }
     }
@@ -251,8 +258,10 @@ public class CrystalAura extends Module {
             attackTimer.setLastMS();
             TryJiggle(entity.getPosition());
             if (SpoofAngle.getValBoolean()) {
-                Rots = Utils.getNeededRotations(entity.getPositionVector().add(0, .5, 0), 0, 0);
-                Wrapper.INSTANCE.sendPacket(new CPacketPlayer.Rotation(Rots[0], Rots[1], mc.player.onGround));
+                Rots = Utils.getNeededRotations(entity.getPositionVector().add(0, .8, 0), 0, 0);
+                mc.player.rotationYaw = Rots[0];
+                mc.player.rotationPitch = Rots[1];
+                // Wrapper.INSTANCE.sendPacket(new CPacketPlayer.Rotation(Rots[0], Rots[1], mc.player.onGround));
             }
             if (SwordHit.getValBoolean() && find_in_hotbar(Items.DIAMOND_SWORD) != -1 && mc.player.isPotionActive(MobEffects.WEAKNESS)) {
                 mc.player.connection.sendPacket(new CPacketHeldItemChange(find_in_hotbar(Items.DIAMOND_SWORD)));

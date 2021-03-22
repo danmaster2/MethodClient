@@ -19,16 +19,16 @@ import static Method.Client.utils.Utils.directionSpeed;
 
 public class Velocity extends Module {
 
-    Setting mode = setmgr.add( new Setting("Mode", this, "Simple", "Simple", "AAC", "Fast",
+    Setting mode = setmgr.add(new Setting("Mode", this, "Simple", "Simple", "AAC", "Fast",
             "YPort", "AAC4Flag", "Pull", "Airmove", "HurtPacket"));
-    Setting XMult = setmgr.add( new Setting("XMultipl", this, 0, 0, 10, false, mode, "Simple", 1));
-    Setting YMult = setmgr.add( new Setting("YMultipl", this, 0, 0, 10, false, mode, "Simple", 2));
-    Setting ZMult = setmgr.add( new Setting("ZMultipl", this, 0, 0, 10, false, mode, "Simple", 3));
-    Setting onPacket = setmgr.add( new Setting("Only Packet", this, true, mode, "Simple", 4));
-    Setting CancelPacket = setmgr.add( new Setting("CancelPacket", this, true, mode, "Simple", 5));
-    Setting Super = setmgr.add( new Setting("Super", this, true, mode, "Pull", 1));
-    Setting Pushspeed = setmgr.add( new Setting("Pushspeed", this, .25, 0.0001, .4, false, mode, "Airmove", 2));
-    Setting Pushstart = setmgr.add( new Setting("Pushstart", this, 8, 2, 9, false, mode, "Airmove", 3));
+    Setting XMult = setmgr.add(new Setting("XMultipl", this, 0, 0, 10, false, mode, "Simple", 1));
+    Setting YMult = setmgr.add(new Setting("YMultipl", this, 0, 0, 10, false, mode, "Simple", 2));
+    Setting ZMult = setmgr.add(new Setting("ZMultipl", this, 0, 0, 10, false, mode, "Simple", 3));
+    Setting onPacket = setmgr.add(new Setting("Only Packet", this, true, mode, "Simple", 4));
+    Setting CancelPacket = setmgr.add(new Setting("CancelPacket", this, true, mode, "Simple", 5));
+    Setting Super = setmgr.add(new Setting("Super", this, true, mode, "Pull", 1));
+    Setting Pushspeed = setmgr.add(new Setting("Pushspeed", this, .25, 0.0001, .4, false, mode, "Airmove", 2));
+    Setting Pushstart = setmgr.add(new Setting("Pushstart", this, 8, 2, 9, false, mode, "Airmove", 3));
 
 
     private double motionX;
@@ -133,10 +133,7 @@ public class Velocity extends Module {
                     if (YMult.getValDouble() == 0 && XMult.getValDouble() == 0 && ZMult.getValDouble() == 0)
                         return false;
                 }
-                if (mc.player.hurtTime == 8) {
-                    mc.player.motionX *= 0.4999;
-                    mc.player.motionY *= 0.4999;
-                }
+
                 return true;
             }
             if (timer.isDelay(100)) {

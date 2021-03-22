@@ -19,21 +19,18 @@ import static Method.Client.Main.setmgr;
 
 
 public class Xray extends Module {
-
-    private final XrayGuiSettings blocks = new XrayGuiSettings(
-            Blocks.COAL_ORE, Blocks.COAL_BLOCK, Blocks.IRON_ORE, Blocks.IRON_BLOCK,
-            Blocks.GOLD_ORE, Blocks.GOLD_BLOCK, Blocks.LAPIS_ORE,
-            Blocks.LAPIS_BLOCK, Blocks.REDSTONE_ORE, Blocks.LIT_REDSTONE_ORE,
-            Blocks.REDSTONE_BLOCK, Blocks.DIAMOND_ORE, Blocks.DIAMOND_BLOCK,
-            Blocks.EMERALD_ORE, Blocks.EMERALD_BLOCK, Blocks.QUARTZ_ORE,
-            Blocks.LAVA, Blocks.MOB_SPAWNER, Blocks.PORTAL, Blocks.END_PORTAL,
-            Blocks.END_PORTAL_FRAME);
-
     public static ArrayList<String> blockNames;
-     Setting Gui = setmgr.add(new Setting("Gui", this, Main.Xray));
+    Setting Gui = setmgr.add(new Setting("Gui", this, Main.Xray));
 
     public Xray() {
         super("Xray", Keyboard.KEY_NONE, Category.RENDER, "Xray");
+        new XrayGuiSettings(Blocks.COAL_ORE, Blocks.COAL_BLOCK, Blocks.IRON_ORE, Blocks.IRON_BLOCK,
+                Blocks.GOLD_ORE, Blocks.GOLD_BLOCK, Blocks.LAPIS_ORE,
+                Blocks.LAPIS_BLOCK, Blocks.REDSTONE_ORE, Blocks.LIT_REDSTONE_ORE,
+                Blocks.REDSTONE_BLOCK, Blocks.DIAMOND_ORE, Blocks.DIAMOND_BLOCK,
+                Blocks.EMERALD_ORE, Blocks.EMERALD_BLOCK, Blocks.QUARTZ_ORE,
+                Blocks.LAVA, Blocks.MOB_SPAWNER, Blocks.PORTAL, Blocks.END_PORTAL,
+                Blocks.END_PORTAL_FRAME);
     }
 
     @Override

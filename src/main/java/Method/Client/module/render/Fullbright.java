@@ -31,7 +31,6 @@ public class Fullbright extends Module {
         mc.player.addPotionEffect(nv);
     }
 
-
     @Override
     public void onEnable() {
         if (mode.getValString().equalsIgnoreCase("Gamma")) {

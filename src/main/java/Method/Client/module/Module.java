@@ -14,6 +14,7 @@ import net.minecraftforge.event.world.GetCollisionBoxesEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import org.lwjgl.input.Keyboard;
 
 import java.util.ArrayList;
 
@@ -25,9 +26,9 @@ public class Module {
     public ArrayList<Module> StoredModules = new ArrayList<>();
 
     public ArrayList<Setting> StoredSettings = new ArrayList<>();
+    public ArrayList<Integer> Keys;
 
     private boolean toggled;
-    private int key;
     public boolean visible = true;
     private String name;
     private String displayName;
@@ -37,7 +38,8 @@ public class Module {
     public Module(String name, int key, Category category, String tooltip) {
         this.name = name;
         this.tooltip = tooltip;
-        this.key = key;
+        this.Keys = new ArrayList<>();
+        this.Keys.add(key);
         this.category = category;
         toggled = false;
         setup();
@@ -112,12 +114,35 @@ public class Module {
         this.name = name;
     }
 
-    public int getKey() {
-        return key;
+    public ArrayList<Integer> getKeys() {
+        return Keys;
     }
 
-    public void setKey(int key) {
-        this.key = key;
+    public void setKey(int Key,boolean Control,boolean Shift,boolean Alt) {
+        this.Keys = new ArrayList<>();
+        if (Control)
+            this.Keys.add(Keyboard.KEY_LCONTROL);
+        if (Shift)
+            this.Keys.add(Keyboard.KEY_LSHIFT);
+        if (Alt)
+            this.Keys.add(Keyboard.KEY_LMENU);
+
+        this.Keys.add(Key);
+    }
+
+
+    public void setKeys(String keys) {
+        if (keys != null) {
+            keys = keys.replaceAll("\\[", "");
+            keys = keys.replaceAll("]", "");
+            keys = keys.replaceAll(" ", "");
+            String[] tryit = keys.split(",");
+            ArrayList<Integer> key = new ArrayList<>();
+            for (String s : tryit) {
+                key.add(Integer.valueOf(s));
+            }
+            this.Keys = key;
+        }
     }
 
     public Category getCategory() {
@@ -315,6 +340,7 @@ public class Module {
 
     public void setsave() {
     }
+
     public void setdelete() {
     }
 

@@ -5,7 +5,7 @@ import Method.Client.module.Onscreen.Display.Hole;
 import Method.Client.module.Onscreen.Display.*;
 import Method.Client.module.Profiles.Profiletem;
 import Method.Client.module.combat.*;
-import Method.Client.module.command.CommandManager;
+import Method.Client.managers.CommandManager;
 import Method.Client.module.misc.*;
 import Method.Client.module.movement.*;
 import Method.Client.module.player.*;
@@ -21,6 +21,7 @@ import net.minecraftforge.event.world.GetCollisionBoxesEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import org.lwjgl.input.Keyboard;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -81,6 +82,7 @@ public class ModuleManager {
         addModule(new Pickupmod());
         addModule(new Livestock());
         addModule(new CoordsFinder());
+        addModule(new EchestBP());
         addModule(new FastSleep());
         addModule(new HitEffects());
         addModule(new Derp());
@@ -102,7 +104,6 @@ public class ModuleManager {
         //// Movement ///
         /////////////////
         addModule(new AntiFall());
-        addModule(new AntiLagback());
         addModule(new AutoSwim());
         addModule(new AutoHold());
         addModule(new Bunnyhop());
@@ -224,14 +225,14 @@ public class ModuleManager {
         addModule(new WallHack());
         addModule(new Xray());
         addModule(new Fovmod());
+
         ////////////////
         //// PROFILES //
         ////////////////
         if (!(FileManager.SaveDir.exists())) {
             addModule(new Profiletem("Example"));
             addModule(new Profiletem("Example2"));
-        }
-        else FileManager.loadPROFILES();
+        } else FileManager.loadPROFILES();
     }
 
     public static void addModule(Module m) {
@@ -247,10 +248,31 @@ public class ModuleManager {
     }
 
 
-    public static void onKeyPressed(int k) {
+    public static void onKeyPressed(int key) {
         for (Module m : modules) {
-            if (m.getKey() == k) {
+            boolean NeedControl = false, NeedShift =false, NeedAlt = false;
+            int Keydiff = 0;
+            for (Integer mKey : m.getKeys()) {
+                if (mKey == Keyboard.KEY_LCONTROL)
+                    NeedControl = true;
+                else if (mKey == Keyboard.KEY_LSHIFT)
+                    NeedShift = true;
+                else if (mKey == Keyboard.KEY_LMENU)
+                    NeedAlt = true;
+                else Keydiff = mKey;
+            }
+            if (key == Keydiff) {
+                if (NeedControl)
+                    if (!Keyboard.isKeyDown(Keyboard.KEY_LCONTROL))
+                        return;
+                if (NeedShift)
+                    if (!Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
+                        return;
+                if (NeedAlt)
+                    if (!Keyboard.isKeyDown(Keyboard.KEY_LMENU))
+                        return;
                 m.toggle();
+
             }
         }
     }
@@ -271,7 +293,7 @@ public class ModuleManager {
 
     public static void onWorldLoad(WorldEvent.Load event) {
         for (Module module : FileManagerLoader) {
-           module.setToggled(true);
+            module.setToggled(true);
         }
         FileManagerLoader.clear();
 
@@ -580,6 +602,7 @@ public class ModuleManager {
             m.GuiOpen(event);
         }
     }
+
     public static void PlayerRespawnEvent(PlayerEvent.PlayerRespawnEvent event) {
         for (Module m : toggledModules) {
             m.PlayerRespawnEvent(event);
@@ -640,7 +663,6 @@ public class ModuleManager {
         return list;
 
     }
-
 
 
 }

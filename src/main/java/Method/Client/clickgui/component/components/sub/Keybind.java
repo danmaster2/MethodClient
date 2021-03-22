@@ -21,6 +21,10 @@ public class Keybind extends Component {
     private int offset;
     private int x;
     private int y;
+
+    private boolean LControl = false;
+    private boolean LShift = false;
+    private boolean LAlt = false;
     protected Minecraft mc = Minecraft.getMinecraft();
 
     public Keybind(Button button, int offset) {
@@ -37,50 +41,69 @@ public class Keybind extends Component {
 
     @Override
     public void renderComponent() {
-        RenderSub(parent, offset, this.hovered);
-        Button.fontSelectButton(binding ? "Press a key..." : ("Key: " + Keyboard.getKeyName(this.parent.mod.getKey())), (parent.parent.getX() + 7), (parent.parent.getY() + offset + 2), -1);
-        GlStateManager.popMatrix();
-        if (this.hovered)
-            Button.fontSelectButton("Press End To Clear", 0, (float) (mc.displayHeight / 2.085), 0xA6a83a32);
-    }
-
-
-    static void RenderSub(Button parent, int offset, boolean hovered) {
         glEnable(GL_BLEND);
-        Gui.drawRect(parent.parent.getX() + 2, parent.parent.getY() + offset, parent.parent.getX() + (parent.parent.getWidth()), parent.parent.getY() + offset + 12, hovered ? GuiModule.Hover.getcolor() : GuiModule.innercolor.getcolor());
+        Gui.drawRect(parent.parent.getX() + 2, parent.parent.getY() + offset, parent.parent.getX() + (parent.parent.getWidth()), parent.parent.getY() + offset + 12, this.hovered ? GuiModule.Hover.getcolor() : GuiModule.innercolor.getcolor());
         Gui.drawRect(parent.parent.getX(), parent.parent.getY() + offset, parent.parent.getX() + 2, parent.parent.getY() + offset + 12, 0xA6111111);
         GL11.glPushMatrix();
+        StringBuilder Keys = new StringBuilder();
+        for (Integer key : this.parent.mod.getKeys()) {
+            Keys.append(" ").append(Keyboard.getKeyName(key));
+        }
+        Button.fontSelectButton((this.binding) ? "Press a key..." : ("Key: " + Keys),
+                (parent.parent.getX() + 7), (parent.parent.getY() + offset + 2), -1);
+        GlStateManager.popMatrix();
+    }
+
+    @Override
+    public void RenderTooltip() {
+        if (this.hovered && this.parent.open) {
+            Button.fontSelect("Press End To Clear", 0, (float) (mc.displayHeight / 2.085), -1);
+        }
     }
 
     @Override
     public void updateComponent(int mouseX, int mouseY) {
+        this.y = this.parent.parent.getY() + this.offset;
+        this.x = this.parent.parent.getX();
         this.hovered = isMouseOnButton(mouseX, mouseY);
-        this.y = parent.parent.getY() + offset;
-        this.x = parent.parent.getX();
     }
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int button) {
-        if (isMouseOnButton(mouseX, mouseY) && button == 0 && this.parent.open) {
+        if (this.hovered && button == 0 && this.parent.open) {
             this.binding = !this.binding;
             PublicBinding = !PublicBinding;
         }
-
     }
 
     @Override
     public void keyTyped(char typedChar, int key) {
         if (this.binding) {
-            this.parent.mod.setKey(key);
+            if (key == Keyboard.KEY_LCONTROL) {
+                LControl = !LControl;
+                return;
+            }
+            if (key == Keyboard.KEY_LSHIFT) {
+                LShift = !LShift;
+                return;
+            }
+            if (key == Keyboard.KEY_LMENU) {
+                LAlt = !LAlt;
+                return;
+            }
+            this.parent.mod.setKey(key, LControl, LShift, LAlt);
             this.binding = false;
+            this.LAlt = false;
+            this.LControl = false;
+            this.LShift = false;
             PublicBinding = false;
-            if (this.parent.mod.getKey() == Keyboard.KEY_END) {
-                this.parent.mod.setKey(0);
+            if (key == Keyboard.KEY_END) {
+                this.parent.mod.setKey(key, false, false, false);
             }
         }
     }
 
     public boolean isMouseOnButton(int x, int y) {
-        return x > this.x && x < this.x + 88 && y > this.y && y < this.y + 12;
+        return x > this.x && x < this.x + this.parent.parent.getWidth() && y > this.y && y < this.y + this.parent.parent.getBarHeight();
     }
 }

@@ -28,7 +28,6 @@ public class Anchor extends Module {
 
     @Override
     public void onClientTick(ClientTickEvent event) {
-
         if (WasJump) {
             if (timer.isDelay(1800)) {
                 timer.setLastMS();

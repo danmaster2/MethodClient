@@ -44,7 +44,6 @@ public class Derp extends Module {
             if (Pitch.getValBoolean())
                 mc.player.rotationPitch = (float) ThreadLocalRandom.current().nextDouble(-90 * doubleit, 90 * doubleit);
         }
-
     }
 
     @Override

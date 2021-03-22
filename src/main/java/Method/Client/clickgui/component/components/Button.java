@@ -135,6 +135,8 @@ public class Button extends Component {
 
     @Override
     public void RenderTooltip() {
+        if (!this.subcomponents.isEmpty())
+            subcomponents.forEach(Component::RenderTooltip);
         if (this.isHovered) {
             Gui.drawRect(0, (int) (mc.displayHeight / 2.085), (int) (this.mod.getTooltip().length() * 5.1), (int) (mc.displayHeight / 2.085) + 10, 0x4D222222);
             fontSelect(this.mod.getTooltip(), 0, (float) (mc.displayHeight / 2.085), this.mod.isToggled() ? 0xA6999999 : -1);

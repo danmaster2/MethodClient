@@ -43,6 +43,7 @@ public class BoatFly extends Module {
     Setting PlaceBypass = setmgr.add(new Setting("PlaceBypass", this, true));
     Setting ComplexMotion = setmgr.add(new Setting("Complex Y Motion", this, true));
     Setting ignoreVehicleMove = setmgr.add(new Setting("No Boat Motion", this, false));
+    Setting NoKick = setmgr.add(new Setting("NoKick", this, false));
     Setting ignorePlayerPosRot = setmgr.add(new Setting("No Player Rotation", this, false));
     Setting Fakerotdist = setmgr.add(new Setting("Fakerotdist", this, 1, .5, 10, false, ignorePlayerPosRot, 14));
     Setting Ncptoggle = setmgr.add(new Setting("Ncptoggle", this, true, bypass, "Packet", 13));
@@ -91,7 +92,6 @@ public class BoatFly extends Module {
 
 
             if (side == Connection.Side.OUT) {
-
                 if (mode.getValString().equalsIgnoreCase("Packet")) {
                     if (!(packet instanceof CPacketVehicleMove) && !(packet instanceof CPacketSteerBoat) && !(packet instanceof CPacketPlayer)) {
                         if (packet instanceof CPacketEntityAction) {
@@ -278,6 +278,8 @@ public class BoatFly extends Module {
             Entity e = mc.player.getRidingEntity();
             if (e == null) return;
             e.setNoGravity(Gravity.getValBoolean());
+            e.inWater = true;
+            e.isAirBorne = false;
             if (mode.getValString().equalsIgnoreCase("Fast")) {
                 final double[] directionSpeedVanilla = directionSpeed(0.20000000298023224);
                 e.motionX = directionSpeedVanilla[0];
@@ -304,6 +306,15 @@ public class BoatFly extends Module {
                 }
             }
 
+            if (this.NoKick.getValBoolean()) {
+                if (mc.gameSettings.keyBindJump.isKeyDown()) {
+                    if (mc.player.ticksExisted % 8 < 2) {
+                        mc.player.getRidingEntity().motionY = -0.03999999910593033D;
+                    }
+                } else if (mc.player.ticksExisted % 8 < 4) {
+                    mc.player.getRidingEntity().motionY = -0.07999999821186066D;
+                }
+            }
 
             if (FakePackets.getValBoolean())
                 FakePackets();

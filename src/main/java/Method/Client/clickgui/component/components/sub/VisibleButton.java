@@ -3,7 +3,14 @@ package Method.Client.clickgui.component.components.sub;
 import Method.Client.clickgui.component.Component;
 import Method.Client.clickgui.component.components.Button;
 import Method.Client.module.Module;
+import Method.Client.module.misc.GuiModule;
+import Method.Client.utils.system.Wrapper;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
+import org.lwjgl.opengl.GL11;
+
+import static org.lwjgl.opengl.GL11.GL_BLEND;
+import static org.lwjgl.opengl.GL11.glEnable;
 
 
 public class VisibleButton extends Component {
@@ -30,17 +37,22 @@ public class VisibleButton extends Component {
 
     @Override
     public void renderComponent() {
-        Keybind.RenderSub(parent, offset, this.hovered);
+        glEnable(GL_BLEND);
+        Gui.drawRect(parent.parent.getX() + 2, parent.parent.getY() + offset, parent.parent.getX() + (parent.parent.getWidth()), parent.parent.getY() + offset + 12, this.hovered ? GuiModule.Hover.getcolor() : GuiModule.innercolor.getcolor());
+        Gui.drawRect(parent.parent.getX(), parent.parent.getY() + offset, parent.parent.getX() + 2, parent.parent.getY() + offset + 12, 0xA6111111);
+        GL11.glPushMatrix();
         Button.fontSelectButton("Visible: " + mod.visible, (parent.parent.getX() + 7), (parent.parent.getY() + offset + 2), -1);
         GlStateManager.popMatrix();
     }
 
     @Override
     public void updateComponent(int mouseX, int mouseY) {
+        this.y = this.parent.parent.getY() + this.offset;
+        this.x = this.parent.parent.getX();
         this.hovered = isMouseOnButton(mouseX, mouseY);
-        this.y = parent.parent.getY() + offset;
-        this.x = parent.parent.getX();
     }
+
+
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int button) {
@@ -50,6 +62,6 @@ public class VisibleButton extends Component {
     }
 
     public boolean isMouseOnButton(int x, int y) {
-        return x > this.x && x < this.x + 88 && y > this.y && y < this.y + 12;
+        return x > this.x && x < this.x + this.parent.parent.getWidth() && y > this.y && y < this.y + this.parent.parent.getBarHeight();
     }
 }

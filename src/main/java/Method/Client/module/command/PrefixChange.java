@@ -1,5 +1,6 @@
 package Method.Client.module.command;
 
+import Method.Client.managers.CommandManager;
 import Method.Client.utils.visual.ChatUtils;
 
 public class PrefixChange extends Command {

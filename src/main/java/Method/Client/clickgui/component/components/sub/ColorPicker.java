@@ -5,7 +5,6 @@ import Method.Client.clickgui.component.components.Button;
 import Method.Client.managers.Setting;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
-import org.lwjgl.opengl.GL11;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -24,7 +23,7 @@ public class ColorPicker extends Component {
     private boolean dragging = false;
     private String localname;
     private int indexer; // 0 color 1 saturation 2 brightness 3 Alpha
-
+    private boolean hovered;
     public double renderWidth = 0;
 
     public ColorPicker(Setting value, Button button, int offset) {
@@ -62,13 +61,13 @@ public class ColorPicker extends Component {
 
     @Override
     public void updateComponent(int mouseX, int mouseY) {
-        this.y = parent.parent.getY() + offset;
-        this.x = parent.parent.getX();
-
-        double diff = Math.min(88, Math.max(0, mouseX - this.x));
+        this.y = this.parent.parent.getY() + this.offset;
+        this.x = this.parent.parent.getX();
+        this.hovered = isMouseOnButton(mouseX, mouseY);
+        double diff = Math.min(this.parent.parent.getWidth(), Math.max(0, mouseX - this.x));
         double min = set.getMin();
         double max = set.getMax();
-        switch (indexer) {
+        switch (this.indexer) {
             case 0:
                 renderWidth = (88) * (set.getValDouble() - min) / (max - min);
                 this.localname = (set.getName() + " Color");
@@ -89,7 +88,7 @@ public class ColorPicker extends Component {
 
         if (dragging) {
             final double value = (diff / 88) * (max - min) + min;
-            switch (indexer) {
+            switch (this.indexer) {
                 case 0:
                     set.setValDouble(diff == 0 ? set.getMin() : roundToPlace(value));
                     break;
@@ -109,28 +108,21 @@ public class ColorPicker extends Component {
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int button) {
-        if (isMouseOnButtonD(mouseX, mouseY) && button == 0 && this.parent.open) {
-            dragging = true;
+        if (this.hovered && button == 0 && this.parent.open) {
+            this.dragging = true;
         }
-        if (isMouseOnButtonI(mouseX, mouseY) && button == 0 && this.parent.open) {
-            dragging = true;
-        }
-        if ((isMouseOnButtonI(mouseX, mouseY) || isMouseOnButtonD(mouseX, mouseY)) && button == 1 && this.parent.open) {
-            indexer = indexer == 3 ? 0 : indexer + 1;
+        if ((this.hovered && button == 1 && this.parent.open)) {
+            this.indexer = this.indexer == 3 ? 0 : this.indexer + 1;
         }
     }
 
     @Override
     public void mouseReleased(int mouseX, int mouseY, int mouseButton) {
-        dragging = false;
+        this.dragging = false;
     }
 
-    public boolean isMouseOnButtonD(int x, int y) {
-        return x > this.x && x < this.x + (parent.parent.getWidth() / 2 + 1) && y > this.y && y < this.y + 12;
-    }
-
-    public boolean isMouseOnButtonI(int x, int y) {
-        return x > this.x + parent.parent.getWidth() / 2 && x < this.x + parent.parent.getWidth() && y > this.y && y < this.y + 12;
+    public boolean isMouseOnButton(int x, int y) {
+        return x > this.x && x < this.x + this.parent.parent.getWidth() && y > this.y && y < this.y + this.parent.parent.getBarHeight();
     }
 
     private static double roundToPlace(double value) {

@@ -7,7 +7,7 @@ public class ClearChat extends Command
 {
 	public ClearChat()
 	{
-		super("Clear ");
+		super("Clear");
 	}
 
 	@Override
@@ -34,6 +34,6 @@ public class ClearChat extends Command
 	@Override
 	public String getSyntax()
 	{
-		return "Clears Chat";
+		return "Clear";
 	}
 }

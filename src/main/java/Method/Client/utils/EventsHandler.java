@@ -5,6 +5,7 @@ import Method.Client.module.Module;
 import Method.Client.module.ModuleManager;
 import Method.Client.module.Onscreen.OnscreenGUI;
 import Method.Client.module.combat.AntiBot;
+import Method.Client.module.misc.EchestBP;
 import Method.Client.module.misc.ModSettings;
 import Method.Client.module.render.NameTags;
 import Method.Client.utils.Screens.NewScreen;
@@ -236,7 +237,6 @@ public class EventsHandler {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void GuiScreenEventInit(GuiScreenEvent.InitGuiEvent.Post event) {
-
         try {
             NewScreen.GuiScreenEventInit(event);
         } catch (RuntimeException ex) {

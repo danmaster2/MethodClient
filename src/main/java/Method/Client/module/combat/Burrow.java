@@ -4,16 +4,13 @@ package Method.Client.module.combat;
 import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
-import Method.Client.utils.BlockUtils;
 import Method.Client.utils.TimerUtils;
 import Method.Client.utils.Utils;
 import Method.Client.utils.visual.ChatUtils;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockEnderChest;
 import net.minecraft.block.BlockObsidian;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.client.*;
@@ -34,6 +31,7 @@ public class Burrow extends Module {
     Setting tpHeight = setmgr.add(new Setting("tpHeight", this, .5, 0, 10, false, mode, "TP", 1));
     Setting delay = setmgr.add(new Setting("delay", this, 200, 1, 500, false));
     Setting Rotate = setmgr.add(new Setting("Rotate", this, true));
+    Setting Instant = setmgr.add(new Setting("Instant", this, true));
     Setting Center = setmgr.add(new Setting("Center", this, true));
     Setting CenterBypass = setmgr.add(new Setting("CenterBypass", this, true, Center, 5));
     Setting OffGround = setmgr.add(new Setting("OffGround", this, true));
@@ -50,18 +48,21 @@ public class Burrow extends Module {
             final ItemStack stack = mc.player.inventory.getStackInSlot(i);
             if (stack != ItemStack.EMPTY && stack.getItem() instanceof ItemBlock) {
                 final Block block = ((ItemBlock) stack.getItem()).getBlock();
-                 if (block instanceof BlockObsidian)
+                if (block instanceof BlockObsidian)
                     return i;
 
             }
         }
         return -1;
     }
+
     @Override
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (this.timer.isDelay((long) this.delay.getValDouble())) {
-            if (find_obi_in_hotbar() !=-1) {
+            if (find_obi_in_hotbar() != -1) {
                 // get our hand swap context and ensure we have obsidian
+
+                double posy = mc.player.posY;
 
                 int current = mc.player.inventory.currentItem;
                 mc.player.connection.sendPacket(new CPacketHeldItemChange(find_obi_in_hotbar()));
@@ -86,6 +87,8 @@ public class Burrow extends Module {
 
                 mc.player.connection.sendPacket(new CPacketHeldItemChange(current));
                 mc.player.inventory.currentItem = current;
+                if (this.Instant.getValBoolean())
+                    mc.player.posY = posy;
                 this.toggle(); // toggle off the module
             }
         }
@@ -94,7 +97,7 @@ public class Burrow extends Module {
     @Override
     public void onEnable() {
         if (mc.player != null) {
-            if (find_obi_in_hotbar() !=-1) {
+            if (find_obi_in_hotbar() != -1) {
                 // attempt to center
                 if (Center.getValBoolean()) {
                     if (CenterBypass.getValBoolean()) {

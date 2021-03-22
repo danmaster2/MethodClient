@@ -1,6 +1,7 @@
-package Method.Client.module.command;
+package Method.Client.managers;
 
 
+import Method.Client.module.command.*;
 import Method.Client.utils.visual.ChatUtils;
 
 import java.util.ArrayList;

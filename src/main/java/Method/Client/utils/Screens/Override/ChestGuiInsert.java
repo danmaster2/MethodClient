@@ -31,6 +31,7 @@ public class ChestGuiInsert extends Screen {
 
     @Override
     public void GuiScreenEventInit(GuiScreenEvent.InitGuiEvent.Post event) {
+
         if (event.getGui() instanceof GuiChest) {
             event.getButtonList().add(new GuiButton(11209, event.getGui().width / 2 + 100, event.getGui().height / 2 - ((GuiChest) event.getGui()).getYSize() + 110, 50, 20, "Steal"));
             event.getButtonList().add(new GuiButton(11210, event.getGui().width / 2 + 100, event.getGui().height / 2 - ((GuiChest) event.getGui()).getYSize() + 130, 50, 20, "Store"));

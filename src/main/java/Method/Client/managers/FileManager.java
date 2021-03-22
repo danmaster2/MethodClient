@@ -6,7 +6,6 @@ import Method.Client.module.Category;
 import Method.Client.module.Module;
 import Method.Client.module.ModuleManager;
 import Method.Client.module.Profiles.Profiletem;
-import Method.Client.module.command.CommandManager;
 import Method.Client.utils.Screens.Custom.Search.SearchGuiSettings;
 import Method.Client.utils.Screens.Custom.Xray.XrayGuiSettings;
 import Method.Client.utils.system.Wrapper;
@@ -83,7 +82,7 @@ public class FileManager {
 
 
                 JsonObject jsonMod = (JsonObject) entry.getValue();
-                m.setKey(jsonMod.get("key").getAsInt());
+                m.setKeys(jsonMod.get("key").getAsString());
                 m.visible = (jsonMod.get("Visible").getAsBoolean());
                 ArrayList<Module> Modstore = new ArrayList<>();
 
@@ -133,7 +132,7 @@ public class FileManager {
 
                 JsonObject JsonMod = new JsonObject();
 
-                JsonMod.addProperty("key", m.getKey());
+                JsonMod.addProperty("key", m.getKeys().toString());
                 JsonMod.addProperty("Visible", m.visible);
 
                 json.add(m.getName(), JsonMod);
@@ -172,9 +171,15 @@ public class FileManager {
             JsonObject json = new JsonObject();
 
             ModuleManager.getModules().forEach(module -> Save(json, module));
+
             JsonObject JsonMod = new JsonObject();
             JsonMod.addProperty("PREFIX", CommandManager.cmdPrefix);
             json.add("PREFIX", JsonMod);
+
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("VERSION", Main.VERSION);
+            json.add("VERSION", jsonObject);
+
             PrintWriter saveJson = new PrintWriter(new FileWriter(Mods));
             saveJson.println(gsonPretty.toJson(json));
             saveJson.close();
@@ -186,7 +191,7 @@ public class FileManager {
     private static void Save(JsonObject json, Module m) {
         JsonObject JsonMod = new JsonObject();
         JsonMod.addProperty("toggled", m.isToggled());
-        JsonMod.addProperty("key", m.getKey());
+        JsonMod.addProperty("key", m.getKeys().toString());
         JsonMod.addProperty("Visible", m.visible);
         json.add(m.getName(), JsonMod);
 
@@ -217,11 +222,11 @@ public class FileManager {
 
             for (Map.Entry<String, JsonElement> entry : moduleJason.entrySet()) {
                 Module mods = ModuleManager.getModuleByName(entry.getKey());
+
                 if (entry.getKey().equals("PREFIX")) {
                     JsonObject jsonMod = (JsonObject) entry.getValue();
                     CommandManager.cmdPrefix = jsonMod.get("PREFIX").getAsCharacter();
                 }
-
                 Load(entry, mods);
             }
 
@@ -235,7 +240,7 @@ public class FileManager {
     private static void Load(Map.Entry<String, JsonElement> entry, Module m) {
         if (m != null) {
             JsonObject jsonMod = (JsonObject) entry.getValue();
-            m.setKey(jsonMod.get("key").getAsInt());
+            m.setKeys(jsonMod.get("key").getAsString());
             m.visible = (jsonMod.get("Visible").getAsBoolean());
             for (Setting s : setmgr.getSettingsByMod(m)) {
                 if (s.getMode().equals("Slider")) {

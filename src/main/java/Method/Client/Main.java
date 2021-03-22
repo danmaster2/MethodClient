@@ -1,11 +1,11 @@
 package Method.Client;
 
 import Method.Client.clickgui.ClickGui;
+import Method.Client.managers.CommandManager;
 import Method.Client.managers.FileManager;
 import Method.Client.managers.SettingsManager;
 import Method.Client.module.ModuleManager;
 import Method.Client.module.Onscreen.OnscreenGUI;
-import Method.Client.module.command.CommandManager;
 import Method.Client.utils.Creativetabs.*;
 import Method.Client.utils.CustomEventsHandler;
 import Method.Client.utils.EventsHandler;
@@ -46,9 +46,9 @@ public class Main {
     public static final String MODID = "method";
     public static final String NAME = "MethodCode";
     public static final String MODCREDITS = "MethodCode";
-    public static final String VERSION = "0.1.0";
+    public static final String VERSION = "0.2.0";
     public static final String MCVERSION = "1.12.2";
-    public static final String MODURL = "http://Github.com/";
+    public static final String MODURL = "https://github.com/danmaster2/MethodClient";
     public static final String MODLOGO = "assets/method/method.png";
     public static final Logger LOGGER = LogManager.getLogger();
 

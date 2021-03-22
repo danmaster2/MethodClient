@@ -219,9 +219,9 @@ public class Utils {
         if (!checkForNeighbours(pos))
             return ValidResult.NoNeighbors;
 
-        IBlockState l_State = Wrapper.mc.world.getBlockState(pos);
+        IBlockState blockState = Wrapper.mc.world.getBlockState(pos);
 
-        if (l_State.getBlock() == Blocks.AIR) {
+        if (blockState.getBlock() == Blocks.AIR) {
             final BlockPos[] l_Blocks =
                     {pos.north(), pos.south(), pos.east(), pos.west(), pos.up(), pos.down()};
 

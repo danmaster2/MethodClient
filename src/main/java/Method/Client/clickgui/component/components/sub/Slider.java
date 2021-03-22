@@ -12,7 +12,6 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.renderer.GlStateManager;
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.opengl.GL11;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -47,8 +46,8 @@ public class Slider extends Component {
     public void renderComponent() {
         glEnable(GL_BLEND);
         Gui.drawRect(parent.parent.getX() + 2, parent.parent.getY() + offset, parent.parent.getX() + parent.parent.getWidth(), parent.parent.getY() + offset + 12, this.hovered ? GuiModule.Hover.getcolor() : GuiModule.innercolor.getcolor());
-        Gui.drawRect(parent.parent.getX() + 2, parent.parent.getY() + offset, parent.parent.getX() + (int) renderWidth, parent.parent.getY() + offset + 12, hovered ? 0xBF555555 : 0xBF444444);
-        Gui.drawRect(parent.parent.getX(), parent.parent.getY() + offset, parent.parent.getX() + 2, parent.parent.getY() + offset + 12, (set.getValDouble() > set.getMax() || set.getValDouble() < set.getMin()) ?  0xA6911111: 0xA6919191);
+        Gui.drawRect(parent.parent.getX() + 2, parent.parent.getY() + offset, parent.parent.getX() + (int) renderWidth, parent.parent.getY() + offset + 12, this.hovered ? 0xBF555555 : 0xBF444444);
+        Gui.drawRect(parent.parent.getX(), parent.parent.getY() + offset, parent.parent.getX() + 2, parent.parent.getY() + offset + 12, (set.getValDouble() > set.getMax() || set.getValDouble() < set.getMin()) ? 0xA6911111 : 0xA6919191);
         GlStateManager.pushMatrix();
         GlStateManager.scale(1f, 1f, 0.5f);
         Button.fontSelectButton(this.set.getName() + ": " + this.set.getValDouble(), (float) ((parent.parent.getX() + 8)), (float) ((parent.parent.getY() + offset + 2)), -1);
@@ -65,6 +64,13 @@ public class Slider extends Component {
     }
 
     @Override
+    public void RenderTooltip() {
+        if (this.hovered && this.parent.open) {
+            Button.fontSelect("Press Ctrl Click For Exact Input.", 0, (float) (mc.displayHeight / 2.085), -1);
+        }
+    }
+
+    @Override
     public String getName() {
         return this.set.getName();
     }
@@ -73,9 +79,10 @@ public class Slider extends Component {
     public void updateComponent(int mouseX, int mouseY) {
         if (Inputbox != null) Inputbox.updateCursorCounter();
 
-        this.hovered = isMouseOnButtonD(mouseX, mouseY) || isMouseOnButtonI(mouseX, mouseY);
-        this.y = parent.parent.getY() + offset;
-        this.x = parent.parent.getX();
+        this.y = this.parent.parent.getY() + this.offset;
+        this.x = this.parent.parent.getX();
+        this.hovered = isMouseOnButton(mouseX, mouseY);
+
 
         double diff = Math.min(88, Math.max(0, mouseX - this.x));
 
@@ -102,20 +109,17 @@ public class Slider extends Component {
     @Override
     public void mouseClicked(int mouseX, int mouseY, int button) {
         if (Inputbox != null) {
-            Inputbox.setFocused(false);
+            this.Inputbox.setFocused(false);
         }
-        if (isMouseOnButtonD(mouseX, mouseY) && button == 0 && this.parent.open && Inputbox == null) {
-            dragging = true;
+        if (this.hovered && button == 0 && this.parent.open && Inputbox == null) {
+            this.dragging = true;
         }
-        if (isMouseOnButtonD(mouseX, mouseY) && button == 0 && this.parent.open && Inputbox != null) {
+        if (this.hovered && button == 0 && this.parent.open && Inputbox != null) {
             Inputbox.setFocused(true);
-        }
-        if (isMouseOnButtonI(mouseX, mouseY) && button == 0 && this.parent.open && Inputbox == null) {
-            dragging = true;
         }
         if (this.hovered && Keyboard.isKeyDown(KEY_LCONTROL) && Inputbox == null) {
             Input();
-            dragging = false;
+            this.dragging = false;
         }
     }
 
@@ -146,12 +150,8 @@ public class Slider extends Component {
         dragging = false;
     }
 
-    public boolean isMouseOnButtonD(int x, int y) {
-        return x > this.x && x < this.x + (parent.parent.getWidth() / 2 + 1) && y > this.y && y < this.y + 12;
-    }
-
-    public boolean isMouseOnButtonI(int x, int y) {
-        return x > this.x + parent.parent.getWidth() / 2 && x < this.x + parent.parent.getWidth() && y > this.y && y < this.y + 12;
+    public boolean isMouseOnButton(int x, int y) {
+        return x > this.x && x < this.x + this.parent.parent.getWidth() && y > this.y && y < this.y + this.parent.parent.getBarHeight();
     }
 
     private static double roundToPlace(double value) {

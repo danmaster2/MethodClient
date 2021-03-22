@@ -5,11 +5,11 @@ import Method.Client.clickgui.component.Component;
 import Method.Client.clickgui.component.Frame;
 import Method.Client.clickgui.component.components.Button;
 import Method.Client.clickgui.component.components.sub.Keybind;
+import Method.Client.managers.CommandManager;
 import Method.Client.managers.FileManager;
 import Method.Client.module.Category;
 import Method.Client.module.Onscreen.PinableFrame;
 import Method.Client.module.command.Command;
-import Method.Client.module.command.CommandManager;
 import Method.Client.utils.visual.ColorUtils;
 import Method.Client.utils.visual.RenderUtils;
 import net.minecraft.client.gui.GuiScreen;
@@ -21,8 +21,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import static Method.Client.clickgui.component.Component.FontRend;
+import static Method.Client.managers.CommandManager.commands;
 import static Method.Client.module.Onscreen.OnscreenGUI.pinableFrames;
-import static Method.Client.module.command.CommandManager.commands;
 import static org.lwjgl.input.Keyboard.KEY_TAB;
 
 public class ClickGui extends GuiScreen {
@@ -170,7 +170,7 @@ public class ClickGui extends GuiScreen {
             for (Command c : commands) {
                 String parse = textbox.getText();
                 if (parse.length() > 0)
-                    if (c.getCommand().toLowerCase().startsWith(parse.toLowerCase()) || parse.toLowerCase().startsWith(c.getCommand())) {
+                    if (c.getCommand().toLowerCase().startsWith(parse.toLowerCase().substring(0, parse.indexOf(' '))) || parse.substring(0, parse.indexOf(' ')).toLowerCase().startsWith(c.getCommand())) {
                         textbox.setText(c.getCommand());
                         break;
                     }

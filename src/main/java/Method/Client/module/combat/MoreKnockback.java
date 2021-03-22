@@ -14,7 +14,7 @@ import org.lwjgl.input.Keyboard;
 public class MoreKnockback extends Module {
 
     public MoreKnockback() {
-        super("KnockbackModifier", Keyboard.KEY_NONE, Category.COMBAT, "Increase knockback");
+        super("MoreKnockback", Keyboard.KEY_NONE, Category.COMBAT, "More Knockback");
     }
 
     @Override

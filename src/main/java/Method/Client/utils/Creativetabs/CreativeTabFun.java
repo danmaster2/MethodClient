@@ -158,13 +158,6 @@ public class CreativeTabFun extends CreativeTabs {
             spawn.setTagCompound(JsonToNBT.getTagFromJson("{display:{Name: \"" + lagStringBuilder.toString() + "\"}}"));
             itemList.add(spawn);
 
-
-            ItemStack ches = new ItemStack(Blocks.MOB_SPAWNER);
-            ches.setStackDisplayName("§c§lEnder Dragon!");
-            ches.setTagCompound(JsonToNBT.getTagFromJson("{BlockEntityTag:{Items:[0:{Slot:0b, id:\"minecraft:mob_spawner\",Count:64b,tag:{BlockEntityTag:{EntityId:\"FallingSand\",MaxNearbyEntities:1000,RequiredPlayerRange:100,SpawnCount:100,SpawnData:{Motion:[0:0.0d,1:0.0d,2:0.0d],Block:\"mob_spawner\",Time:1,Data:0,TileEntityData:{EntityId:\"FallingSand\",MaxNearbyEntities:1000,RequiredPlayerRange:100,SpawnCount:100,SpawnData:{Motion:[0:0.0d,1:0.0d,2:0.0d],Block:\"mob_spawner\",Time:1,Data:0,TileEntityData:{EntityId:\"EnderDragon\",MaxNearbyEntities:1000,RequiredPlayerRange:100,SpawnCount:100,MaxSpawnDelay:20,SpawnRange:100,MinSpawnDelay:20},DropItem:0},MaxSpawnDelay:20,SpawnRange:500,MinSpawnDelay:20},DropItem:0},MaxSpawnDelay:5,SpawnRange:500,Delay:20,MinSpawnDelay:5}},Damage:0s}],value:\"Chest\",Lock:\"\"}}"));
-            itemList.add(ches);
-
-
         } catch (NBTException e) {
             e.printStackTrace();
         }

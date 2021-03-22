@@ -242,17 +242,16 @@ public class SeedViewer extends Module {
                 return false;
             if (RealChunk instanceof BlockOre && FakeChunk instanceof BlockOre)
                 return false;
-            if (RealChunk.getLocalizedName().equals(Blocks.MONSTER_EGG.getLocalizedName())&& FakeChunk instanceof BlockStone)
+            if (RealChunk.getLocalizedName().equals(Blocks.MONSTER_EGG.getLocalizedName()) && FakeChunk instanceof BlockStone)
                 return false;
             if ((FakeChunk instanceof BlockStone && RealChunk instanceof BlockDirt) || (FakeChunk instanceof BlockDirt && RealChunk instanceof BlockStone))
                 return false;
-
+            if (!(FakeChunk instanceof BlockAir) && RealChunk instanceof BlockAir)
+                if (!mc.world.getBlockState(blockPos).getBlock().getLocalizedName().equals(RealChunk.getLocalizedName()))
+                    return false;
         }
 
-
         if (!FakeChunk.getLocalizedName().equals(RealChunk.getLocalizedName())) {
-            System.out.println(RealChunk.getLocalizedName());
-            System.out.println(FakeChunk.getLocalizedName());
             return true;
         }
         return false;

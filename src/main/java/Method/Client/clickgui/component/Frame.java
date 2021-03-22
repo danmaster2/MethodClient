@@ -230,6 +230,10 @@ public class Frame {
         return width;
     }
 
+    public int getBarHeight() {
+        return barHeight;
+    }
+
     public void updatePosition(int mouseX, int mouseY) {
         if (this.isDragging) {
             if (!((mouseX - dragX + this.width > mc.displayWidth / 2) || ((mouseX - dragX)) < 0))

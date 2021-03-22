@@ -1,7 +1,5 @@
 package Method.Client.clickgui.component;
 
-import Method.Client.Main;
-import Method.Client.utils.font.CFontRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.util.ResourceLocation;
@@ -39,17 +37,21 @@ public class Component {
         return 0;
     }
 
+
+
     public int gety() {
         return 0;
     }
+
     public String getName() {
         return "";
     }
+
     public String getCategory() {
         return null;
     }
 
-    public static FontRenderer FontRend = new FontRenderer( Minecraft.getMinecraft().gameSettings, new ResourceLocation("textures/font/ascii_sga.png"),  Minecraft.getMinecraft().renderEngine, true);
+    public static FontRenderer FontRend = new FontRenderer(Minecraft.getMinecraft().gameSettings, new ResourceLocation("textures/font/ascii_sga.png"), Minecraft.getMinecraft().renderEngine, true);
 
 
 }
