@@ -3,7 +3,7 @@
   "modid": "method",
   "name": "methodcode",
   "description": "Method is a Collection of code",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "mcversion": "${mcversion}",
   "url": "www.method.com",
   "updateUrl": "www.method.com",
