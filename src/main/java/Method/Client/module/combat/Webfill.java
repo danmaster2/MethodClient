@@ -160,7 +160,7 @@ public class Webfill extends Module {
 
             if (!Utils.canBeClicked(neighbor)) continue;
 
-            if (Surrond.blackList.contains(mc.world.getBlockState(neighbor).getBlock())) {
+            if (Surround.blackList.contains(mc.world.getBlockState(neighbor).getBlock())) {
                 mc.player.connection.sendPacket(new CPacketEntityAction(mc.player, CPacketEntityAction.Action.START_SNEAKING));
                 sneak = true;
             }

@@ -64,7 +64,7 @@ public class ModuleManager {
         addModule(new Strafe());
         addModule(new Offhand());
         addModule(new SelfTrap());
-        addModule(new Surrond());
+        addModule(new Surround());
         addModule(new Trigger());
         addModule(new Webfill());
         addModule(new TotemPop());

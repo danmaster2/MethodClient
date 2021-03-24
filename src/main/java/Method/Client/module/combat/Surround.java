@@ -22,7 +22,7 @@ import java.util.List;
 
 import static Method.Client.Main.setmgr;
 
-public class Surrond extends Module {
+public class Surround extends Module {
 
     Setting blocksPerTick = setmgr.add(new Setting("blocksPerTick", this, 10, 0, 10, true));
     Setting rotate = setmgr.add(new Setting("rotate", this, true));
@@ -39,8 +39,8 @@ public class Surrond extends Module {
     public static List<Block> shulkerList;
     private static Vec3d[] SURROUND;
 
-    public Surrond() {
-        super("Surrond", Keyboard.KEY_NONE, Category.COMBAT, "Surrond you with obsidian");
+    public Surround() {
+        super("Surround", Keyboard.KEY_NONE, Category.COMBAT, "Surrounds you with obsidian");
     }
 
     @Override
