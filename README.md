@@ -1,7 +1,6 @@
 ![minecraft](https://img.shields.io/badge/Minecraft-1.12.2-blue.svg)
 ![GitHub All Releases](https://img.shields.io/github/downloads/danmaster2/MethodClient/total?color=purple)
 ![minecraft](https://img.shields.io/badge/Key--bind-Right--shift-brightgreen)
-![Discord](https://img.shields.io/discord/786079199147720724?color=green&label=Discord&logo=discord&logoColor=white)
 
 # Method Client
 
