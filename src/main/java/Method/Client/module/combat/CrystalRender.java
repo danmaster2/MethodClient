@@ -37,7 +37,7 @@ public class CrystalRender extends Module {
         setmgr.add(NoSpin = new Setting("NoSpin", this,  false));
     }
 
-    @Subscribe
+    @Override
     public void onToggle() {
         ModEnderCrystal.Toggle();
     }
