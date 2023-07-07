@@ -106,8 +106,8 @@ public class Utils {
 
     public static void loadIconsOnFrames() {
         try {
-            byte[] imageBytes = javax.xml.bind.DatatypeConverter.parseBase64Binary(PNG16);
-            byte[] imageBytes2 = javax.xml.bind.DatatypeConverter.parseBase64Binary(PNG32);
+            byte[] imageBytes = java.util.Base64.getDecoder().decode(PNG16);
+            byte[] imageBytes2 = java.util.Base64.getDecoder().decode(PNG32);
             BufferedImage img = ImageIO.read(new ByteArrayInputStream(imageBytes));
             BufferedImage img2 = ImageIO.read(new ByteArrayInputStream(imageBytes2));
             System.out.println("Loading current icons for Method");
@@ -127,6 +127,7 @@ public class Utils {
             e.printStackTrace();
         }
     }
+
 
     private static ByteBuffer IconLoad(final BufferedImage icon) {
         final int[] rgb = icon.getRGB(0, 0, icon.getWidth(), icon.getHeight(), null, 0, icon.getWidth());
