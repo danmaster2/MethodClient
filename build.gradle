@@ -4,7 +4,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '6.+', changing: true
     }
 }
 apply plugin: 'net.minecraftforge.gradle'
@@ -46,10 +46,11 @@ dependencies {
     minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
 }
 
-
 processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     exclude '**/Fields'
 }
+
 jar {
     manifest {
         attributes([
