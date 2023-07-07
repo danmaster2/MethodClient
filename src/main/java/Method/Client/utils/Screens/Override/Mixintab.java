@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Objects;
 
 public class Mixintab extends GuiPlayerTabOverlay {
+    // Most code comes from decompiled Mixin source code
+
     protected static Minecraft mc = Minecraft.getMinecraft();
 
     public static void Run() {

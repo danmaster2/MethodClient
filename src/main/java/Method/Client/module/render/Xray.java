@@ -4,72 +4,61 @@ import Method.Client.Main;
 import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
-import Method.Client.utils.Patcher.Events.*;
-import Method.Client.utils.Screens.Custom.Xray.XrayGuiSettings;
+import Method.Client.utils.Patcher.Events.GetAmbientOcclusionLightValueEvent;
+import Method.Client.utils.Patcher.Events.RenderBlockModelEvent;
+import Method.Client.utils.Patcher.Events.RenderTileEntityEvent;
+import Method.Client.utils.Patcher.Events.ShouldSideBeRenderedEvent;
+import Method.Client.utils.Screens.SubGui;
+import Method.Client.utils.proxy.Overrides.ForgeBlockModelRendererOverride;
+import Method.Client.utils.proxy.Overrides.VisGraphOverride;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
-
-import java.util.ArrayList;
-import java.util.Collections;
 
 import static Method.Client.Main.setmgr;
 
 
 public class Xray extends Module {
-    public static ArrayList<String> blockNames;
-    Setting Gui = setmgr.add(new Setting("Gui", this, Main.Xray));
+    Setting Gui = setmgr.add(new Setting("Gui", this, Main.Xraygui));
 
     public Xray() {
         super("Xray", Keyboard.KEY_NONE, Category.RENDER, "Xray");
-        new XrayGuiSettings(Blocks.COAL_ORE, Blocks.COAL_BLOCK, Blocks.IRON_ORE, Blocks.IRON_BLOCK,
-                Blocks.GOLD_ORE, Blocks.GOLD_BLOCK, Blocks.LAPIS_ORE,
-                Blocks.LAPIS_BLOCK, Blocks.REDSTONE_ORE, Blocks.LIT_REDSTONE_ORE,
-                Blocks.REDSTONE_BLOCK, Blocks.DIAMOND_ORE, Blocks.DIAMOND_BLOCK,
-                Blocks.EMERALD_ORE, Blocks.EMERALD_BLOCK, Blocks.QUARTZ_ORE,
-                Blocks.LAVA, Blocks.MOB_SPAWNER, Blocks.PORTAL, Blocks.END_PORTAL,
-                Blocks.END_PORTAL_FRAME);
     }
 
     @Override
     public void onEnable() {
-        blockNames = new ArrayList<>(XrayGuiSettings.getBlockNames());
-        MinecraftForge.EVENT_BUS.register(this);
         mc.renderGlobal.loadRenderers();
+        VisGraphOverride.stop = true;
+        ForgeBlockModelRendererOverride.runevent = true;
     }
 
-
-    @Override
+    @Subscribe
     public void onClientTick(TickEvent.ClientTickEvent event) {
         mc.gameSettings.gammaSetting = 16;
     }
 
-    @Override
-    public void SetOpaqueCubeEvent(SetOpaqueCubeEvent event) {
-        event.setCanceled(true);
-    }
 
-    @Override
+    @Subscribe
     public void onGetAmbientOcclusionLightValue(GetAmbientOcclusionLightValueEvent event) {
         event.setLightValue(1);
     }
 
-    @Override
+
     public void onShouldSideBeRendered(ShouldSideBeRenderedEvent event) {
-        event.setRendered(isVisible(event.getState().getBlock()));
+        if (this.isToggled())
+            event.setRendered(isVisible(event.getState().getBlock()));
     }
 
-    @Override
+    @Subscribe
     public void onRenderBlockModel(RenderBlockModelEvent event) {
         if (!isVisible(event.getState().getBlock()))
             event.setCanceled(true);
     }
 
 
-    // For chest objects//
-    @Override
+    // Repeat chest objects//
+    @Subscribe
     public void onRenderTileEntity(RenderTileEntityEvent event) {
         if (!isVisible(event.getTileEntity().getBlockType()))
             event.setCanceled(true);
@@ -77,15 +66,18 @@ public class Xray extends Module {
 
     @Override
     public void onDisable() {
-        MinecraftForge.EVENT_BUS.unregister(this);
+        VisGraphOverride.stop = false;
+        ForgeBlockModelRendererOverride.runevent = false;
         mc.renderGlobal.loadRenderers();
-
     }
 
     private boolean isVisible(Block block) {
-        String name = getName(block);
-        int index = Collections.binarySearch(blockNames, name);
-        return index >= 0;
+        for (SubGui.SelectedThing selectedThing : Main.Xraygui.listGui.list) {
+            if (selectedThing.isSelected)
+                if (selectedThing.name.equalsIgnoreCase(getName(block))) return true;
+        }
+
+        return false;
     }
 
     public static String getName(Block block) {

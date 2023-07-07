@@ -5,6 +5,7 @@ import Method.Client.Main;
 import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -52,7 +53,7 @@ public class NetherSky extends Module {
         this.disableBackgroundRenderer(mc.player.world);
     }
 
-    @Override
+    @Subscribe
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (!this.wasChanged) {
             this.enableBackgroundRenderer(mc.player.world);
@@ -60,12 +61,12 @@ public class NetherSky extends Module {
         }
     }
 
-    @Override
+    @Subscribe
     public void onWorldLoad(WorldEvent.Load event) {
         this.wasChanged = false;
     }
 
-    @Override
+    @Subscribe
     public void onWorldUnload(WorldEvent.Unload event) {
         this.wasChanged = false;
     }
@@ -106,12 +107,13 @@ public class NetherSky extends Module {
             for (int i = 0; i < 6; ++i) {
                 if (mode.getValString().equalsIgnoreCase("Glint")) {
 
-                    mc.getTextureManager().bindTexture(new ResourceLocation(Main.MODID, "N.png"));
+                    mc.getTextureManager().bindTexture(new ResourceLocation(Main.MODID, "none.png"));
                 }
 
                 if (mode.getValString().equalsIgnoreCase("Method")) {
                     mc.getTextureManager().bindTexture(new ResourceLocation(Main.MODID, "method.png"));
                 }
+
 
                 GlStateManager.pushMatrix();
                 if (i == 1) {

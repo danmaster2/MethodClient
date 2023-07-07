@@ -1,26 +1,28 @@
 package Method.Client.managers;
 
 
-import Method.Client.module.command.*;
+import Method.Client.command.*;
 import Method.Client.utils.visual.ChatUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Optional;
 
 public class CommandManager {
-    public static ArrayList<Command> commands = new ArrayList<Command>();
-    private volatile static CommandManager instance;
-
+    static CommandManager instance;
+    public final ArrayList<Command> commands;
     public static char cmdPrefix = '@';
 
-    public CommandManager() {
-        addCommands();
+    private CommandManager() {
+        this.commands = new ArrayList<>();
+        registerCommands();
     }
 
-    public void addCommands() {
+    public void registerCommands() {
         commands.add(new Help());
         commands.add(new VClip());
-        commands.add(new OpenFolder());
         commands.add(new Login());
+        commands.add(new Edit());
         commands.add(new FakePlayer());
         commands.add(new UsernameHistory());
         commands.add(new Say());
@@ -32,6 +34,7 @@ public class CommandManager {
         commands.add(new Friend());
         commands.add(new ClearChat());
         commands.add(new OpenDir());
+        commands.add(new Invsee());
         commands.add(new Author());
         commands.add(new ResetGui());
         commands.add(new Yaw());
@@ -52,33 +55,33 @@ public class CommandManager {
         commands.add(new Repair());
         commands.add(new Tp());
         commands.add(new Profile());
-
     }
 
-    public void runCommands(String s) {
-        String readString = s.trim().substring(Character.toString(cmdPrefix).length()).trim();
-        boolean commandResolved = false;
-        boolean hasArgs = readString.trim().contains(" ");
-        String commandName = hasArgs ? readString.split(" ")[0] : readString.trim();
-        String[] args = hasArgs ? readString.substring(commandName.length()).trim().split(" ") : new String[0];
+    public void runCommands(String input) {
+        String sanitizedInput = input.trim().substring(String.valueOf(cmdPrefix).length()).trim();
+        String[] parsedInput = sanitizedInput.split(" ");
+        String commandName = parsedInput[0];
+        String[] arguments = Arrays.copyOfRange(parsedInput, 1, parsedInput.length);
 
-        for (Command command : commands) {
-            if (command.getCommand().trim().equalsIgnoreCase(commandName.trim())) {
-                command.runCommand(readString, args);
-                commandResolved = true;
-                break;
+        Optional<Command> matchedCommand = commands.stream()
+                .filter(cmd -> cmd.Syntax.split(" ")[0].equalsIgnoreCase(commandName.trim()))
+                .findFirst();
+
+        if (matchedCommand.isPresent()) {
+            try {
+                matchedCommand.get().runCommand(sanitizedInput, arguments);
+            } catch (Exception e) {
+                ChatUtils.error("Usage: " + matchedCommand.get().Syntax);
             }
-        }
-
-        if (!commandResolved) {
+        } else {
             ChatUtils.error("Cannot resolve internal command: \u00a7c" + commandName);
         }
     }
 
-
-    public static CommandManager getInstance() {
-        if (instance == null)
+    public static synchronized CommandManager getInstance() {
+        if (instance == null) {
             instance = new CommandManager();
+        }
         return instance;
     }
 }

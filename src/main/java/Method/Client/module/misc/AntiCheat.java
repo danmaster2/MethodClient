@@ -6,6 +6,7 @@ import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
 import Method.Client.utils.visual.ChatUtils;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityBoat;
@@ -23,10 +24,10 @@ public class AntiCheat extends Module {
     Setting Experimental = setmgr.add(new Setting("Experimental", this, true));
 
     public AntiCheat() {
-        super("CheatDetect", Keyboard.KEY_NONE, Category.MISC, "AntiCheat For others!");
+        super("CheatDetect", Keyboard.KEY_NONE, Category.MISC, "AntiCheat on others!");
     }
 
-    @Override
+    @Subscribe
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (mc.player.ticksExisted % 5 == 0)
             for (Entity entityplayer : mc.world.loadedEntityList) {
@@ -36,7 +37,7 @@ public class AntiCheat extends Module {
                         if (entity.rotationPitch > 90.0F || entity.rotationPitch < -90.0F) {
                             ChatUtils.message(entity.getName() + " flagged Invalid Head Pitch ");
                         }
-                        if (Math.abs(Math.abs(entity.posY) - Math.abs(entity.prevPosY)) > 1.0d && !entity.onGround && !entity.collidedVertically && entity.posY > entity.prevPosY && !entity.isOnLadder() && !entity.isInWater()) {
+                        if (Math.abs(Math.abs(entity.posY) - Math.abs(entity.prevPosY)) > 1.0d && !entity.onGround && !entity.collidedVertically && entity.posY > entity.prevPosY && !entity.isElytraFlying() && !entity.isOnLadder() && !entity.isInWater()) {
                             ChatUtils.message(entity.getName() + " flagged Ascension ");
                         }
                         if (isMoving(entity) && ((entity.cameraPitch == entity.prevCameraPitch && entity.cameraPitch == (int) entity.cameraPitch) || (entity.rotationYaw == entity.prevRotationYaw && entity.rotationYaw == (int) entity.prevRotationYaw)))
@@ -59,11 +60,13 @@ public class AntiCheat extends Module {
                             if (entity.isRiding())
                                 if (entity.getRidingEntity() instanceof EntityBoat)
                                     if (!entity.inWater)
-                                        ChatUtils.message(entity.getName() + " flagged Boat-Fly ");
+                                        if (!entity.onGround)
+                                            ChatUtils.message(entity.getName() + " flagged Boat-Fly ");
 
                             if (entity.isOverWater())
-                                if (entity.isSprinting())
-                                    ChatUtils.message(entity.getName() + " flagged Jesus ");
+                                if (!entity.inWater)
+                                    if (entity.isSprinting())
+                                        ChatUtils.message(entity.getName() + " flagged Jesus ");
                             if (entity.stepHeight > 1)
                                 ChatUtils.message(entity.getName() + " flagged Step ");
                             if (Math.abs(entity.posX - entity.lastTickPosX) > 0.42
@@ -73,7 +76,7 @@ public class AntiCheat extends Module {
                                 if (Math.abs(entity.posX - entity.lastTickPosX) > 0.3 || Math.abs(entity.posZ - entity.lastTickPosZ) > 0.3)
                                     ChatUtils.message(entity.getName() + " flagged NoSlow ");
 
-                            if (!entity.isElytraFlying() && (!mc.world.checkBlockCollision(entity.getEntityBoundingBox().offset(0, -1.1, 0)))
+                            if (!entity.onGround && !entity.isElytraFlying() && (!mc.world.checkBlockCollision(entity.getEntityBoundingBox().offset(0, -1.1, 0)))
                                     && entity.prevPosY < entity.posY)
                                 ChatUtils.message(entity.getName() + " flagged Flying ");
 

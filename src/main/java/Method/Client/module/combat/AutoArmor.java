@@ -4,26 +4,23 @@ import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
 import Method.Client.utils.system.Connection.Side;
-import Method.Client.utils.system.Wrapper;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.InventoryEffectRenderer;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Enchantments;
 import net.minecraft.inventory.ClickType;
+import net.minecraft.inventory.Container;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemElytra;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.client.CPacketClickWindow;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.NonNullList;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import org.lwjgl.input.Keyboard;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 
 import static Method.Client.Main.setmgr;
 
@@ -35,126 +32,107 @@ public class AutoArmor extends Module {
     Setting delay = setmgr.add(new Setting("Delay", this, 1, 0, 5, true));
     Setting nocurse = setmgr.add(new Setting("No Binding", this, true));
     Setting Elytra = setmgr.add(new Setting("Elytra Over Chest", this, true));
-    Setting Edam = setmgr.add(new Setting("Elytra Damage", this, 2, 0, 320, true));
-    boolean ElytraSwitch = false;
+
 
     public AutoArmor() {
-        super("Auto Armor", Keyboard.KEY_NONE, Category.COMBAT, "Puts on any Armor");
+        super("Auto Armor", Keyboard.KEY_NONE, Category.COMBAT, "Puts on Armor");
     }
 
-    @Override
-    public void onEnable() {
-        ElytraSwitch = false;
-        this.timer = 0;
-        super.onEnable();
-    }
-
-    @Override
+    @Subscribe
     public void onClientTick(ClientTickEvent event) {
         if (timer > 0) {
             timer--;
             return;
         }
-        if (Wrapper.INSTANCE.mc().currentScreen instanceof GuiContainer
-                && !(Wrapper.INSTANCE.mc().currentScreen instanceof InventoryEffectRenderer))
-            return;
 
-        InventoryPlayer inventory = mc.player.inventory;
+        if (mc.currentScreen instanceof GuiContainer
+                && !(mc.currentScreen instanceof InventoryEffectRenderer))
+            return;
 
         if (!swapWhileMoving.getValBoolean()
                 && (mc.player.movementInput.moveForward != 0
                 || mc.player.movementInput.moveStrafe != 0))
             return;
 
-
-        int[] bestArmorSlots = new int[4];
-        int[] bestArmorValues = new int[4];
-
-
-        for (int type = 0; type < 4; type++) {
-            bestArmorSlots[type] = -1;
-
-            ItemStack stack = inventory.armorItemInSlot(type);
-            if (Elytra.getValBoolean() && type == 2)
-                if (stack.getItem() instanceof ItemElytra) {
-                    if (stack.isEmpty())
-                        ElytraSwitch = false;
-                    if (stack.getItem().getDamage(stack) > stack.getItem().getMaxDamage(stack) - Edam.getValDouble()) {
-                        ElytraSwitch = false;
-                    }
-                    continue;
+        for (EntityEquipmentSlot entityEquipmentSlot : EntityEquipmentSlot.values()) {
+            if (entityEquipmentSlot.getSlotType() == EntityEquipmentSlot.Type.HAND) {
+                continue;
+            }
+            ItemStack best = getBestArmor(entityEquipmentSlot);
+            if (best != ItemStack.EMPTY) {
+                int inventoryIndex = mc.player.inventory.getSlotFor(best);
+                if (inventoryIndex != -1) {
+                    swapArmor(entityEquipmentSlot, inventoryIndex);
+                    break;
                 }
-
-            if (isNullOrEmpty(stack)
-                    || !(stack.getItem() instanceof ItemArmor))
-                continue;
-            ItemArmor item = (ItemArmor) stack.getItem();
-            bestArmorValues[type] = getArmorValue(item, stack);
+            }
         }
+    }
 
+    private void swapArmor(EntityEquipmentSlot slot, int inventoryIndex) {
+        int slotId = 8 - slot.getIndex();
+        Container container = mc.player.inventoryContainer;
+        mc.playerController.windowClick(container.windowId, inventoryIndex, slotId, ClickType.SWAP, mc.player);
+    }
 
-        for (int slot = 0; slot < 36; slot++) {
-            ItemStack stack = inventory.getStackInSlot(slot);
-            if (stack.getItem() instanceof ItemElytra && Elytra.getValBoolean() && !ElytraSwitch) {
-                if (stack.getItem().getDamage(stack) > stack.getItem().getMaxDamage(stack) - Edam.getValDouble()) {
-                    continue;
+    private ItemStack getBestArmor(EntityEquipmentSlot slot) {
+        NonNullList<ItemStack> inventory = mc.player.inventory.mainInventory;
+        ItemStack best = ItemStack.EMPTY;
+
+        for (ItemStack stack : inventory) {
+            if (!isNullOrEmpty(stack)) {
+                if (shouldEquip(mc.player.getItemStackFromSlot(slot), stack, best, slot)) {
+                    best = stack;
                 }
-                bestArmorSlots[2] = slot;
-                ElytraSwitch = true;
-                continue;
-            }
-            if (isNullOrEmpty(stack)
-                    || !(stack.getItem() instanceof ItemArmor))
-                continue;
-            if (nocurse.getValBoolean())
-                if (EnchantmentHelper.hasBindingCurse(stack))
-                    continue;
-
-            ItemArmor item = (ItemArmor) stack.getItem();
-            int armorType = item.armorType.getIndex();
-            int armorValue = getArmorValue(item, stack);
-
-            if (armorValue > bestArmorValues[armorType]) {
-                bestArmorSlots[armorType] = slot;
-                bestArmorValues[armorType] = armorValue;
             }
         }
 
+        return best;
+    }
 
-        ArrayList<Integer> types = new ArrayList<>(Arrays.asList(0, 1, 2, 3));
-        Collections.shuffle(types);
-        for (int type : types) {
+    public static boolean isNullOrEmpty(ItemStack stack) {
+        return stack == null || stack.isEmpty();
+    }
 
-            int slot = bestArmorSlots[type];
-            if (slot == -1)
-                continue;
-            if (inventory.armorItemInSlot(type).getItem() instanceof ItemElytra && Elytra.getValBoolean()) {
-                ItemStack stack = inventory.armorItemInSlot(type);
-                if (stack.getItem().getDamage(stack) > stack.getItem().getMaxDamage(stack) - Edam.getValDouble()) {
-                    Wrapper.INSTANCE.mc().playerController.windowClick(0, 8 - type, 0, ClickType.QUICK_MOVE,
-                            mc.player);
-                    ElytraSwitch = false;
-                } else continue;
-            }
-            ItemStack oldArmor = inventory.armorItemInSlot(type);
-            if (!isNullOrEmpty(oldArmor)
-                    && inventory.getFirstEmptyStack() == -1)
-                continue;
+    private boolean shouldEquip(ItemStack equiped, ItemStack current, ItemStack best, EntityEquipmentSlot slot) {
+        if (!((current.getItem() instanceof ItemArmor && ((ItemArmor) current.getItem()).armorType == slot) ||
+                current.getItem() instanceof ItemElytra)
+        )
+            return false;
 
-            if (slot < 9)
-                slot += 36;
+        if (nocurse.getValBoolean())
+            if (EnchantmentHelper.hasBindingCurse(current))
+                return false;
+        int currentval = 0, equipedVal = 0, bestVal = 0;
 
-            if (!isNullOrEmpty(oldArmor))
-                Wrapper.INSTANCE.mc().playerController.windowClick(0, 8 - type, 0, ClickType.QUICK_MOVE,
-                        mc.player);
+        if (current.getItem() instanceof ItemArmor)
+            currentval = getArmorValue((ItemArmor) current.getItem(), current, slot);
+        if (!isNullOrEmpty(equiped) && equiped.getItem() instanceof ItemArmor)
+            equipedVal = getArmorValue((ItemArmor) equiped.getItem(), equiped, slot);
+        if (!isNullOrEmpty(best) && best.getItem() instanceof ItemArmor)
+            bestVal = getArmorValue((ItemArmor) best.getItem(), best, slot);
 
-
-            Wrapper.INSTANCE.mc().playerController.windowClick(0, slot, 0, ClickType.QUICK_MOVE,
-                    mc.player);
-
-            break;
+        if (Elytra.getValBoolean() && slot == EntityEquipmentSlot.CHEST && current.getItem() instanceof ItemElytra) {
+            if (!isNullOrEmpty(best))
+                if (best.getItem() instanceof ItemElytra) {
+                    if (current.getItemDamage() < best.getItemDamage())
+                        return true;
+                } else {
+                    return true;
+                }
+            return true;
         }
-        super.onClientTick(event);
+
+        if (currentval < bestVal)
+            return false;
+        if (currentval > bestVal && currentval > equipedVal && best.getItem() instanceof ItemArmor)
+            return true;
+
+        if (isNullOrEmpty(equiped) && isNullOrEmpty(best)) {
+            return true;
+        }
+
+        return false;
     }
 
     @Override
@@ -165,15 +143,12 @@ public class AutoArmor extends Module {
         return true;
     }
 
-    public static boolean isNullOrEmpty(ItemStack stack) {
-        return stack == null || stack.isEmpty();
-    }
 
-    int getArmorValue(ItemArmor item, ItemStack stack) {
+    int getArmorValue(ItemArmor item, ItemStack stack, EntityEquipmentSlot slot) {
         int armorPoints = item.damageReduceAmount;
         int prtPoints = 0;
         int armorToughness = (int) item.toughness;
-        int armorType = item.getArmorMaterial().getDamageReductionAmount(EntityEquipmentSlot.LEGS);
+        int armorType = item.getArmorMaterial().getDamageReductionAmount(slot);
 
         if (useEnchantments.getValBoolean()) {
             Enchantment protection = Enchantments.PROTECTION;

@@ -2,8 +2,7 @@ package Method.Client.utils.proxy;
 
 import Method.Client.Main;
 import Method.Client.module.Module;
-import Method.Client.utils.proxy.Overrides.ColorMix;
-import Method.Client.utils.proxy.Overrides.EntityRenderMixin;
+import Method.Client.utils.proxy.Overrides.*;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -16,8 +15,13 @@ public class ClientProxy implements IProxy {
 
     @Override
     public void init(FMLInitializationEvent event) {
-        ColorMix.replaceRenderers();
+        EntityrenderOverride.replaceRenderers();
         ViewBobOverride();
+        ForgeBlockModelRendererOverride.init();
+        mc.mouseHelper = new PitchYawHelper();
+
+
+        mc.renderGlobal = new RenderGlobalOverride(mc);
     }
 
     public static void ViewBobOverride() {

@@ -1,57 +1,65 @@
 package Method.Client.utils;
 
-import Method.Client.module.render.MobOwner;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.Serializable;
+import java.io.*;
 import java.net.URL;
-import java.util.Calendar;
+import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class PlayerIdentity implements Serializable {
+    private static final ExecutorService executor = Executors.newCachedThreadPool();
+    private static final LinkedHashMap<String, PlayerIdentity> identityCacheMap = new LinkedHashMap<>();
+
     private String displayName;
     private final String stringUuid;
+    private final String originalUuid;
 
     public PlayerIdentity(String stringUuid) {
-        String formattedUuid = stringUuid.replace("-", "");
-        this.stringUuid = stringUuid;
+        this.originalUuid = stringUuid;
+        this.stringUuid = stringUuid.replace("-", "");
         this.displayName = "Loading...";
-        new Thread(() -> {
-            this.displayName = getName(formattedUuid);
-            MobOwner.identityCacheMap.put(this.getStringUuid(), this);
-        }).start();
+
+        executor.submit(() -> {
+            try {
+                updateNameAndCache();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
-    private static String getName(String UUID) {
-        try {
-            URL e = new URL("https://api.mojang.com/user/profiles/" + UUID.replace("-", "") + "/names");
-            BufferedReader reader = new BufferedReader(new InputStreamReader(e.openConnection().getInputStream()));
-            StringBuilder jsonb = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                jsonb.append(line).append("\n");
-            }
-            String formattedjson = jsonb.toString();
-            reader.close();
+    private void updateNameAndCache() throws IOException {
+        this.displayName = getNameFromAPI(this.stringUuid);
+        synchronized (identityCacheMap) {
+            identityCacheMap.put(this.originalUuid, this);
+        }
+    }
+
+    public static synchronized PlayerIdentity getPlayerIdentity(String UUID) {
+        return identityCacheMap.getOrDefault(UUID, new PlayerIdentity(UUID));
+    }
+
+    private static String getNameFromAPI(String UUID) throws IOException {
+        String jsonURL = "https://api.mojang.com/user/profiles/" + UUID + "/names";
+        try (InputStream inputStream = new URL(jsonURL).openStream();
+             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+            String formattedjson = reader.lines().map(line -> line + "\n").collect(Collectors.joining());
 
             JsonArray array = new JsonParser().parse(formattedjson).getAsJsonArray();
             JsonObject obj = array.get(array.size() - 1).getAsJsonObject();
+
             String nameform = obj.get("name").getAsString();
-            try {
-                obj.get("changedToAt");
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTimeInMillis(obj.get("changedToAt").getAsLong());
-                return nameform;
-            } catch (Exception ee) {
-                return nameform;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+            Instant changedAt = Instant.ofEpochMilli(obj.get("changedToAt").getAsLong());
+
+            System.out.println("Name: " + nameform + ", Changed at: " + changedAt);
+            return nameform;
+        } catch (JsonSyntaxException | JsonIOException | IOException e) {
+            throw new IOException("Error while parsing username history", e);
         }
-        return UUID;
     }
 
     public String getDisplayName() {
@@ -59,8 +67,7 @@ public class PlayerIdentity implements Serializable {
     }
 
     public String getStringUuid() {
-        return this.stringUuid;
+        return this.originalUuid;
     }
-
 }
 

@@ -4,6 +4,7 @@ package Method.Client.module.misc;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
 import Method.Client.utils.system.Connection;
+import com.google.common.eventbus.Subscribe;
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.play.client.CPacketCustomPayload;
@@ -22,6 +23,16 @@ public class AntiHandShake extends Module {
 
     @Override
     public boolean onDisablePacket(Object packet, Connection.Side side) {
+        return cancelHandshake(packet, side);
+    }
+
+    @Override
+    public boolean onPacket(Object packet, Connection.Side side) {
+        return cancelHandshake(packet, side);
+    }
+
+
+    private boolean cancelHandshake(Object packet, Connection.Side side) {
         if ((packet instanceof CPacketResourcePackStatus)) {
             ((CPacketResourcePackStatus) packet).action = CPacketResourcePackStatus.Action.SUCCESSFULLY_LOADED;
         }
@@ -39,5 +50,6 @@ public class AntiHandShake extends Module {
         }
         return true;
     }
+
 
 }

@@ -1,9 +1,11 @@
 package Method.Client.module.Onscreen;
 
+import Method.Client.Main;
 import Method.Client.managers.Setting;
 import Method.Client.utils.font.CFontRenderer;
+import Method.Client.utils.visual.RenderUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraft.client.renderer.GlStateManager;
 
 import java.awt.*;
 import java.text.DecimalFormat;
@@ -11,6 +13,7 @@ import java.text.DecimalFormat;
 import static Method.Client.clickgui.component.Component.FontRend;
 
 public class PinableFrame {
+
     private final int width;
     public int defaultWidth;
     public int y;
@@ -26,15 +29,6 @@ public class PinableFrame {
     public String[] text;
     protected Minecraft mc = Minecraft.getMinecraft();
 
-    public static void Toggle(String s, boolean b) {
-        for (PinableFrame i : OnscreenGUI.pinableFrames) {
-            if (i.title.equals(s)) {
-                i.setPinned(b);
-                break;
-            }
-        }
-    }
-
     public PinableFrame(String title, String[] text, int y, int x) {
         FontRender = new CFontRenderer(new Font("Impact", Font.PLAIN, 18), true, false);
         this.title = title;
@@ -46,6 +40,14 @@ public class PinableFrame {
         this.barHeight = 13;
         this.dragX = 0;
         this.isDragging = false;
+    }
+
+    public static void Toggle(PinableFrame pin, boolean isPinned) {
+        if (isPinned)
+            Main.eventBus.register(pin);
+        else
+            Main.eventBus.unregister(pin);
+        pin.setPinned(isPinned);
     }
 
     protected DecimalFormat getDecimalFormat(int i) {
@@ -67,7 +69,7 @@ public class PinableFrame {
         }
     }
 
-    protected void GetSetup(PinableFrame pinableFrame, Setting xpos, Setting ypos, Setting Frame, Setting FontSize) {
+    protected void getSetup(PinableFrame pinableFrame, Setting xpos, Setting ypos, Setting Frame, Setting FontSize) {
         pinableFrame.x = (int) xpos.getValDouble();
         pinableFrame.y = (int) ypos.getValDouble();
         if (Frame.getValString().equalsIgnoreCase("false") || Frame.getValString() == null)
@@ -75,7 +77,7 @@ public class PinableFrame {
         pinableFrame.FontRender.setFontS(Frame.getValString(), FontSize.getValDouble(), this.FontRender);
     }
 
-    protected void GetInit(PinableFrame pinableFrame, Setting xpos, Setting ypos, Setting Frame, Setting FontSize) {
+    protected void getInit(PinableFrame pinableFrame, Setting xpos, Setting ypos, Setting Frame, Setting FontSize) {
         if (pinableFrame.FontRender.getSize() != (int) FontSize.getValDouble() || !pinableFrame.FontRender.getFont().getName().equalsIgnoreCase(Frame.getValString()))
             pinableFrame.FontRender.setFontS(Frame.getValString(), FontSize.getValDouble(), pinableFrame.FontRender);
         if (!pinableFrame.getDrag()) {
@@ -116,6 +118,13 @@ public class PinableFrame {
     public void renderFrame() {
         if (this.isPinned)
             FontRend.drawStringWithShadow(title, this.x + 3, this.y + 3, 0xFFFFFFFF);
+    }
+
+    public void scale(boolean up) {
+        if (up)
+            GlStateManager.scale(RenderUtils.simpleScale(false), RenderUtils.simpleScale(false), 0.5f);
+        else
+            GlStateManager.scale(1f, 1f, 0.5f);
     }
 
     public void Ongui() {
@@ -186,12 +195,7 @@ public class PinableFrame {
         this.isPinned = pinned;
     }
 
-
-    public void onRenderGameOverlay(RenderGameOverlayEvent.Text event) {
-    }
-
     public void setup() {
     }
-
 
 }

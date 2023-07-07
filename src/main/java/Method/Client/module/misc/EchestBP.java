@@ -5,6 +5,7 @@ import Method.Client.module.Category;
 import Method.Client.module.Module;
 import Method.Client.utils.system.Connection;
 import Method.Client.utils.visual.ChatUtils;
+import com.google.common.eventbus.Subscribe;
 import com.mojang.realmsclient.gui.ChatFormatting;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -53,7 +54,7 @@ public class EchestBP extends Module {
         return !(packet instanceof CPacketCloseWindow);
     }
 
-    @Override
+    @Subscribe
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (mc.currentScreen instanceof GuiInventory)
             mc.playerController.updateController();

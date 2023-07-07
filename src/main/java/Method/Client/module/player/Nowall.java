@@ -4,6 +4,7 @@ import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
 import Method.Client.utils.system.Connection;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -15,10 +16,15 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 
+import java.util.ArrayList;
+
 import static Method.Client.Main.setmgr;
+import static Method.Client.utils.visual.RenderUtils.RenderBlock;
+import static Method.Client.utils.visual.RenderUtils.Standardbb;
 
 
 public class Nowall extends Module {
@@ -28,19 +34,18 @@ public class Nowall extends Module {
 
     Setting Storage = setmgr.add(new Setting("Storage", this, true));
     Setting Mine = setmgr.add(new Setting("Mine", this, false));
+    Setting Trail = setmgr.add(new Setting("Trail", this, false));
 
+    public Setting idcolor = setmgr.add(new Setting("color", this, .22, 1, 1, 1));
+    Setting Drawmode = setmgr.add(new Setting("Mode", this, "Outline", BlockEspOptions()));
+    Setting LineWidth = setmgr.add(new Setting("LineWidth", this, 1, 0, 3, false));
     private boolean clicked;
     private boolean focus = false;
 
-    @Override
+    @Subscribe
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (Mine.getValBoolean()) {
-            mc.world.loadedEntityList.stream()
-                    .filter(entity -> entity instanceof EntityLivingBase)
-                    .filter(entity -> mc.player == entity)
-                    .map(entity -> (EntityLivingBase) entity)
-                    .filter(entity -> !(entity.isDead))
-                    .forEach(this::process);
+            process(mc.player);
 
             RayTraceResult normal_result = mc.objectMouseOver;
 
@@ -48,7 +53,29 @@ public class Nowall extends Module {
                 focus = normal_result.typeOfHit == RayTraceResult.Type.ENTITY;
             }
         }
+    }
 
+    @Subscribe
+    public void onRenderWorldLast(RenderWorldLastEvent event) {
+        if (Trail.getValBoolean()) {
+            ArrayList<BlockPos> blocks = getallinLine();
+            for (BlockPos block : blocks) {
+                RenderBlock(Drawmode.getValString(), Standardbb(block), idcolor.getcolor(), LineWidth.getValDouble());
+            }
+
+        }
+    }
+
+    public ArrayList<BlockPos> getallinLine() {
+        int distance = 6;
+        ArrayList<BlockPos> blocks = new ArrayList<>();
+        for (int i = 0; i < distance; i++) {
+            Vec3d vec = mc.player.getPositionEyes(mc.getRenderPartialTicks());
+            vec = vec.add(mc.player.getLook(mc.getRenderPartialTicks()).scale(i));
+            BlockPos pos = new BlockPos(vec);
+            blocks.add(pos);
+        }
+        return blocks;
     }
 
     private void process(EntityLivingBase event) {
@@ -95,9 +122,7 @@ public class Nowall extends Module {
     }
 
     private Entity findUsableEntity() {
-
         Entity entity = null;
-
         for (int i = 0; i <= mc.playerController.getBlockReachDistance(); i++) {
             final AxisAlignedBB bb = this.traceToBlock(i, mc.getRenderPartialTicks());
             float maxDist = mc.playerController.getBlockReachDistance();

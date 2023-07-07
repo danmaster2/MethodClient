@@ -3,6 +3,7 @@ package Method.Client.module.render;
 import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.client.gui.BossInfoClient;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
@@ -27,56 +28,33 @@ public class BossStack extends Module {
         super("BossStack", Keyboard.KEY_NONE, Category.RENDER, "BossStack");
     }
 
-    @Override
+    @Subscribe
     public void RenderGameOverLayPost(RenderGameOverlayEvent.Post event) {
-        if (!(event.getType() == RenderGameOverlayEvent.ElementType.BOSSINFO))
-            return;
+        if (event.getType() != RenderGameOverlayEvent.ElementType.BOSSINFO) return;
+
+        Map<UUID, BossInfoClient> bossInfoMap = mc.ingameGUI.getBossOverlay().mapBossInfos;
+        if (bossInfoMap == null) return;
+
+        ScaledResolution scaledResolution = new ScaledResolution(mc);
+        int screenWidth = scaledResolution.getScaledWidth();
+        int barPositionY = 12;
+
         if (mode.getValString().equalsIgnoreCase("Minimize")) {
-            Map<UUID, BossInfoClient> map = mc.ingameGUI.getBossOverlay().mapBossInfos;
-            if (map == null) return;
-            ScaledResolution scaledresolution = new ScaledResolution(mc);
-            int i = scaledresolution.getScaledWidth();
-            int j = 12;
-
-            for (Map.Entry<UUID, BossInfoClient> entry : map.entrySet()) {
-                BossInfoClient info = entry.getValue();
-                String text = info.getName().getFormattedText();
-
-                j = Collapse(event, i, j, info, text);
+            for (BossInfoClient bossInfo : bossInfoMap.values()) {
+                barPositionY = renderScaledBossBar(event, screenWidth, barPositionY, bossInfo, bossInfo.getName().getFormattedText());
             }
         } else if (mode.getValString().equalsIgnoreCase("Stack")) {
-            Map<UUID, BossInfoClient> map = mc.ingameGUI.getBossOverlay().mapBossInfos;
-            HashMap<String, Pair<BossInfoClient, Integer>> to = new HashMap<>();
-
-            for (Map.Entry<UUID, BossInfoClient> entry : map.entrySet()) {
-                String s = entry.getValue().getName().getFormattedText();
-                Pair<BossInfoClient, Integer> p;
-                if (to.containsKey(s)) {
-                    p = to.get(s);
-                    p = new Pair<>(p.getKey(), p.getValue() + 1);
-                } else {
-                    p = new Pair<>(entry.getValue(), 1);
-                }
-                to.put(s, p);
-            }
-
-            ScaledResolution scaledresolution = new ScaledResolution(mc);
-            int i = scaledresolution.getScaledWidth();
-            int j = 12;
-
-            for (Map.Entry<String, Pair<BossInfoClient, Integer>> entry : to.entrySet()) {
-                String text = entry.getKey();
-                BossInfoClient info = entry.getValue().getKey();
-                int a = entry.getValue().getValue();
-                text += " x" + a;
-
-                j = Collapse(event, i, j, info, text);
+            Map<String, Pair<BossInfoClient, Integer>> stackedBossInfoMap = getStackedBossInfoMap(bossInfoMap);
+            for (Map.Entry<String, Pair<BossInfoClient, Integer>> entry : stackedBossInfoMap.entrySet()) {
+                String text = entry.getKey() + " x" + entry.getValue().getValue();
+                barPositionY = renderScaledBossBar(event, screenWidth, barPositionY, entry.getValue().getKey(), text);
             }
         }
 
     }
 
-    @Override
+
+    @Subscribe
     public void onRenderPre(RenderGameOverlayEvent.Pre event) {
         if (event.getType() == RenderGameOverlayEvent.ElementType.BOSSINFO) {
             event.setCanceled(true);
@@ -84,26 +62,35 @@ public class BossStack extends Module {
     }
 
 
-    private int Collapse(RenderGameOverlayEvent.Post event, int i, int j, BossInfoClient info, String text) {
-        int k = (int) ((i / scale.getValDouble()) / 2 - 91);
+    private Map<String, Pair<BossInfoClient, Integer>> getStackedBossInfoMap(Map<UUID, BossInfoClient> bossInfoMap) {
+        Map<String, Pair<BossInfoClient, Integer>> stackedMap = new HashMap<>();
+        for (BossInfoClient bossInfo : bossInfoMap.values()) {
+            String bossName = bossInfo.getName().getFormattedText();
+            Pair<BossInfoClient, Integer> pair = stackedMap.getOrDefault(bossName, new Pair<>(bossInfo, 0));
+            pair.setValue(pair.getValue() + 1);
+            stackedMap.put(bossName, pair);
+        }
+        return stackedMap;
+    }
+
+    private int renderScaledBossBar(RenderGameOverlayEvent.Post event, int screenWidth, int posY, BossInfoClient bossInfo, String bossName) {
+        int barPositionX = (int) ((screenWidth / scale.getValDouble()) / 2 - 91);
         GlStateManager.scale(scale.getValDouble(), scale.getValDouble(), 1);
         if (!event.isCanceled()) {
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
             mc.getTextureManager().bindTexture(GUI_BARS_TEXTURES);
-            mc.ingameGUI.getBossOverlay().render(k, j, info);
-            mc.fontRenderer.drawStringWithShadow(text, (float) ((i / scale.getValDouble()) / 2 - mc.fontRenderer.getStringWidth(text) / 2), (float) (j - 9), 16777215);
+            mc.ingameGUI.getBossOverlay().render(barPositionX, posY, bossInfo);
+            mc.fontRenderer.drawStringWithShadow(bossName, (float) ((screenWidth / scale.getValDouble()) / 2 - mc.fontRenderer.getStringWidth(bossName) / 2), (float) (posY - 9), 16777215);
         }
         GlStateManager.scale(1d / scale.getValDouble(), 1d / scale.getValDouble(), 1);
-        j += 10 + mc.fontRenderer.FONT_HEIGHT;
-        return j;
+        return posY + 10 + mc.fontRenderer.FONT_HEIGHT;
     }
-
 
 }
 
 class Pair<T, S> {
-    T key;
-    S value;
+    private T key;
+    private S value;
 
     public Pair(T key, S value) {
         this.key = key;
@@ -116,10 +103,6 @@ class Pair<T, S> {
 
     public S getValue() {
         return value;
-    }
-
-    public void setKey(T key) {
-        this.key = key;
     }
 
     public void setValue(S value) {

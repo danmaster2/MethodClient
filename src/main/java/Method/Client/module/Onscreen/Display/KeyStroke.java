@@ -3,7 +3,11 @@ package Method.Client.module.Onscreen.Display;
 import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
+import Method.Client.module.Onscreen.OnscreenGUI;
 import Method.Client.module.Onscreen.PinableFrame;
+import Method.Client.utils.visual.RenderUtils;
+import com.google.common.eventbus.Subscribe;
+import net.minecraft.client.gui.Gui;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.Text;
 import org.lwjgl.input.Keyboard;
 
@@ -11,7 +15,7 @@ import java.awt.*;
 import java.util.ArrayList;
 
 import static Method.Client.Main.setmgr;
-import static net.minecraft.client.gui.Gui.drawRect;
+
 
 public final class KeyStroke extends Module {
     public KeyStroke() {
@@ -29,6 +33,7 @@ public final class KeyStroke extends Module {
     static Setting Clicks;
     static Setting ClicksPerSec;
     static Setting FontSize;
+    static PinableFrame pin;
 
     @Override
     public void setup() {
@@ -44,41 +49,41 @@ public final class KeyStroke extends Module {
         setmgr.add(ypos = new Setting("ypos", this, 220, -20, (mc.displayHeight / 2) + 250, true));
         setmgr.add(Frame = new Setting("Font", this, "Times", fontoptions()));
         setmgr.add(FontSize = new Setting("FontSize", this, 22, 10, 40, true));
+        pin = new KeyStrokeRUN();
+        OnscreenGUI.pinableFrames.add(pin);
     }
 
     @Override
     public void onEnable() {
-        PinableFrame.Toggle("KeyStrokeSET", true);
-
+        PinableFrame.Toggle(pin, true);
     }
 
     @Override
     public void onDisable() {
-        PinableFrame.Toggle("KeyStrokeSET", false);
-
+        PinableFrame.Toggle(pin, false);
     }
 
     public static class KeyStrokeRUN extends PinableFrame {
 
         public KeyStrokeRUN() {
             super("KeyStrokeSET", new String[]{}, (int) ypos.getValDouble(), (int) xpos.getValDouble());
+
         }
-
-
         @Override
         public void setup() {
-            GetSetup(this, xpos, ypos, Frame, FontSize);
+            getSetup(this, xpos, ypos, Frame, FontSize);
         }
 
         @Override
         public void Ongui() {
-            GetInit(this, xpos, ypos, Frame, FontSize);
+            getInit(this, xpos, ypos, Frame, FontSize);
         }
 
         ArrayList<Double> clicks = new ArrayList<>();
         boolean startclick = false;
 
-        @Override
+
+        @Subscribe
         public void onRenderGameOverlay(Text event) {
             if (mc.gameSettings.keyBindAttack.pressed) {
                 startclick = true;
@@ -86,37 +91,48 @@ public final class KeyStroke extends Module {
                 startclick = false;
                 clicks.add((double) System.currentTimeMillis());
             }
+
             ArrayList<Double> rem = new ArrayList<>();
             for (Double click : clicks) {
-                if (click + 1000 < System.currentTimeMillis()) rem.add(click);
+                if (click + 1000 < System.currentTimeMillis()) {
+                    rem.add(click);
+                }
             }
             clicks.removeAll(rem);
 
             int black = (new Color(0, 0, 0, 40).getRGB());
             int rain = TextColor.getcolor();
             int white = Presscolor.getcolor();
-            fontSelect(Frame, mc.gameSettings.keyBindForward.getDisplayName(), this.x + 18, this.y, mc.gameSettings.keyBindForward.pressed ? white : rain, Shadow.getValBoolean());
-            fontSelect(Frame, mc.gameSettings.keyBindLeft.getDisplayName(), this.x, this.y + 20, mc.gameSettings.keyBindLeft.pressed ? white : rain, Shadow.getValBoolean());
-            fontSelect(Frame, mc.gameSettings.keyBindBack.getDisplayName(), this.x + 20, this.y + 20, mc.gameSettings.keyBindBack.pressed ? white : rain, Shadow.getValBoolean());
-            fontSelect(Frame, mc.gameSettings.keyBindRight.getDisplayName(), this.x + 40, this.y + 20, mc.gameSettings.keyBindRight.pressed ? white : rain, Shadow.getValBoolean());
+
+            int posx = (int) (this.x * RenderUtils.simpleScale(false));
+            int posy = (int) (this.y * RenderUtils.simpleScale(true));
+
+            fontSelect(Frame, mc.gameSettings.keyBindForward.getDisplayName(), posx + 18, posy, mc.gameSettings.keyBindForward.pressed ? white : rain, Shadow.getValBoolean());
+            fontSelect(Frame, mc.gameSettings.keyBindLeft.getDisplayName(), posx, posy + 20, mc.gameSettings.keyBindLeft.pressed ? white : rain, Shadow.getValBoolean());
+            fontSelect(Frame, mc.gameSettings.keyBindBack.getDisplayName(), posx + 20, posy + 20, mc.gameSettings.keyBindBack.pressed ? white : rain, Shadow.getValBoolean());
+            fontSelect(Frame, mc.gameSettings.keyBindRight.getDisplayName(), posx + 40, posy + 20, mc.gameSettings.keyBindRight.pressed ? white : rain, Shadow.getValBoolean());
+
             if (Clicks.getValBoolean()) {
                 if (Background.getValBoolean()) {
-                    drawRect(this.x, this.y + 40, this.x + 20, this.y + 20, mc.gameSettings.keyBindAttack.pressed ? rain : black);
-                    drawRect(this.x + 20, this.y + 40, this.x + 40, this.y + 20, mc.gameSettings.keyBindUseItem.pressed ? rain : black);
+                    Gui.drawRect(posx, posy + 40, posx + 20, posy + 20, mc.gameSettings.keyBindAttack.pressed ? rain : black);
+                    Gui.drawRect(posx + 20, posy + 40, posx + 40, posy + 20, mc.gameSettings.keyBindUseItem.pressed ? rain : black);
                 }
-                fontSelect(Frame, "LMB", this.x, this.y + 40, mc.gameSettings.keyBindAttack.pressed ? white : rain, Shadow.getValBoolean());
-                fontSelect(Frame, "RMB", this.x + 30, this.y + 40, mc.gameSettings.keyBindUseItem.pressed ? white : rain, Shadow.getValBoolean());
+
+                fontSelect(Frame, "LMB", posx, posy + 40, mc.gameSettings.keyBindAttack.pressed ? white : rain, Shadow.getValBoolean());
+                fontSelect(Frame, "RMB", posx + 30, posy + 40, mc.gameSettings.keyBindUseItem.pressed ? white : rain, Shadow.getValBoolean());
             }
+
             if (ClicksPerSec.getValBoolean()) {
-                fontSelect(Frame, "Clicks: " + clicks.size(), this.x, this.y + 60, mc.gameSettings.keyBindAttack.pressed ? white : rain, Shadow.getValBoolean());
+                fontSelect(Frame, "Clicks: " + clicks.size(), posx, posy + 60, mc.gameSettings.keyBindAttack.pressed ? white : rain, Shadow.getValBoolean());
             }
+
             if (Background.getValBoolean()) {
-                drawRect(this.x + 15, this.y, this.x + 25, this.y + 20, mc.gameSettings.keyBindForward.pressed ? rain : black);
-                drawRect(this.x, this.y + 20, this.x + 10, this.y + 40, mc.gameSettings.keyBindLeft.pressed ? rain : black);
-                drawRect(this.x + 20, this.y + 20, this.x + 30, this.y + 40, mc.gameSettings.keyBindBack.pressed ? rain : black);
-                drawRect(this.x + 40, this.y + 20, this.x + 50, this.y + 40, mc.gameSettings.keyBindRight.pressed ? rain : black);
+                Gui.drawRect(posx + 15, posy, posx + 25, posy + 20, mc.gameSettings.keyBindForward.pressed ? rain : black);
+                Gui.drawRect(posx, posy + 20, posx + 10, posy + 40, mc.gameSettings.keyBindLeft.pressed ? rain : black);
+                Gui.drawRect(posx + 20, posy + 20, posx + 30, posy + 40, mc.gameSettings.keyBindBack.pressed ? rain : black);
+                Gui.drawRect(posx + 40, posy + 20, posx + 50, posy + 40, mc.gameSettings.keyBindRight.pressed ? rain : black);
             }
-            super.onRenderGameOverlay(event);
+
         }
     }
 

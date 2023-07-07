@@ -3,48 +3,21 @@ package Method.Client.module.Onscreen;
 import Method.Client.clickgui.component.Component;
 import Method.Client.clickgui.component.Frame;
 import Method.Client.module.Category;
-import Method.Client.module.Onscreen.Display.*;
+import Method.Client.utils.visual.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraft.client.renderer.GlStateManager;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class OnscreenGUI extends GuiScreen {
-    public static final ArrayList<PinableFrame> pinableFrames = new ArrayList<>();
+    public static ArrayList<PinableFrame> pinableFrames = new ArrayList<>();
 
     private final Frame Onscreen;
 
     public OnscreenGUI() {
         Onscreen = new Frame(Category.ONSCREEN);
         Onscreen.setOpen(true);
-        pinableFrames.add(new Angles.AnglesRUN());
-        pinableFrames.add(new Player.PlayerRUN());
-        pinableFrames.add(new EnabledMods.EnabledModsRUN());
-        pinableFrames.add(new Armor.ArmorRUN());
-        pinableFrames.add(new Biome.BiomeRUN());
-        pinableFrames.add(new Blockview.BlockviewRUN());
-        pinableFrames.add(new Durability.DurabilityRUN());
-        pinableFrames.add(new Coords.CoordsRUN());
-        pinableFrames.add(new Direction.DirectionRUN());
-        pinableFrames.add(new Fps.FpsRUN());
-        pinableFrames.add(new CombatItems.CombatItemsRUN());
-        pinableFrames.add(new ChunkSize.ChunkSizeRUN());
-        pinableFrames.add(new Inventory.InventoryRUN());
-        pinableFrames.add(new NetherCords.NetherCordsRUN());
-        pinableFrames.add(new Ping.PingRUN());
-        pinableFrames.add(new Hole.HoleRUN());
-        pinableFrames.add(new PlayerCount.PlayerCountRUN());
-        pinableFrames.add(new Server.ServerRUN());
-        pinableFrames.add(new PlayerSpeed.SpeedRUN());
-        pinableFrames.add(new KeyStroke.KeyStrokeRUN());
-        pinableFrames.add(new Time.TimeRUN());
-        pinableFrames.add(new Tps.TpsRUN());
-        pinableFrames.add(new Hunger.HungerRUN());
-        pinableFrames.add(new Potions.PotionsRUN());
-        pinableFrames.add(new Enemypos.EnemyposRUN());
-        pinableFrames.add(new ServerResponce.ServerResponceRUN());
     }
 
     protected Minecraft mc = Minecraft.getMinecraft();
@@ -54,11 +27,12 @@ public class OnscreenGUI extends GuiScreen {
         super.updateScreen();
     }
 
-
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         this.drawDefaultBackground();
-
+        mouseX = (int) (mouseX / RenderUtils.simpleScale(false));
+        mouseY = (int) (mouseY /  RenderUtils.simpleScale(true));
+        GlStateManager.scale(RenderUtils.simpleScale(false), RenderUtils.simpleScale(false), 0.5f);
         if (Onscreen.isWithinBounds(mouseX, mouseY))
             Onscreen.handleScrollinput();
 
@@ -68,14 +42,9 @@ public class OnscreenGUI extends GuiScreen {
         if (Onscreen.isOpen())
             for (Component comp : Onscreen.getComponents()) {
                 comp.RenderTooltip();
-                try {
-                    comp.updateComponent(mouseX, mouseY);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                comp.updateComponent(mouseX, mouseY);
             }
         for (PinableFrame pinableFrame : pinableFrames) {
-
             if (mc.currentScreen instanceof OnscreenGUI) {
                 pinableFrame.renderFrame();
                 pinableFrame.Ongui();
@@ -83,10 +52,13 @@ public class OnscreenGUI extends GuiScreen {
             pinableFrame.renderFrameText();
             pinableFrame.updatePosition(mouseX, mouseY);
         }
+        GlStateManager.scale(1f, 1f, 0.5f);
     }
 
     @Override
-    protected void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) {
+    protected void mouseClicked( int mouseX,  int mouseY, final int mouseButton) {
+        mouseX = (int) (mouseX / RenderUtils.simpleScale(false));
+        mouseY = (int) (mouseY / RenderUtils.simpleScale(true));
         if (Onscreen.isWithinHeader(mouseX, mouseY) && mouseButton == 0) {
             Onscreen.setDrag(true);
             Onscreen.dragX = mouseX - Onscreen.getX();
@@ -123,6 +95,8 @@ public class OnscreenGUI extends GuiScreen {
 
     @Override
     protected void mouseReleased(int mouseX, int mouseY, int state) {
+        mouseX = (int) (mouseX / RenderUtils.simpleScale(false));
+        mouseY = (int) (mouseY / RenderUtils.simpleScale(true));
         Onscreen.setDrag(false);
         Onscreen.setDragBot(false);
 
@@ -158,11 +132,4 @@ public class OnscreenGUI extends GuiScreen {
         return false;
     }
 
-
-    public static void onRenderGameOverlay(RenderGameOverlayEvent.Text event) {
-        for (PinableFrame frame : OnscreenGUI.pinableFrames) {
-            if (frame.isPinned())
-                frame.onRenderGameOverlay(event);
-        }
-    }
 }

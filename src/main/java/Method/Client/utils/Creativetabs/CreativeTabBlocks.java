@@ -14,12 +14,18 @@ public class CreativeTabBlocks extends CreativeTabs {
 
 
     public CreativeTabBlocks() {
-        super("Blocks");
+        super("Block");
+        this.tabLabel = "Block";
     }
 
     @Override
     public String getTabLabel() {
-        return "Blocks";
+        return "Block";
+    }
+
+    @Override
+     public String getTranslationKey() {
+        return "Block";
     }
 
     @Override

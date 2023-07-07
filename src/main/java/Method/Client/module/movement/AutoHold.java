@@ -5,6 +5,7 @@ import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
 import Method.Client.utils.proxy.Overrides.MoveOverride;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
@@ -102,7 +103,8 @@ public class AutoHold extends Module {
         Toggled = false;
     }
 
-    @Override
+
+    @Subscribe
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (unloadedChunk.getValBoolean()) {
             Unloaded = !mc.world.getChunk(mc.player.getPosition()).isLoaded();

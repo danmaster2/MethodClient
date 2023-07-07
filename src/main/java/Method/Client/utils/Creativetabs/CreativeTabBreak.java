@@ -17,9 +17,15 @@ public class CreativeTabBreak extends CreativeTabs {
 
     public CreativeTabBreak() {
         super("Break");
+        this.tabLabel = "Break";
     }
     @Override
     public String getTabLabel() {
+        return "Break";
+    }
+
+    @Override
+    public String getTranslationKey() {
         return "Break";
     }
     @Override

@@ -7,5 +7,7 @@ public enum Category {
     COMBAT,
     PLAYER,
     PROFILES,
-    ONSCREEN
+    MAKER,
+    ONSCREEN,
+    HISTORY
 }

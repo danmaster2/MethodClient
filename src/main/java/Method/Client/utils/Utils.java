@@ -1,62 +1,52 @@
 package Method.Client.utils;
 
-import Method.Client.managers.Setting;
 import Method.Client.utils.system.Wrapper;
+import Method.Client.utils.visual.ChatUtils;
+import com.mojang.authlib.GameProfile;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.gui.GuiChat;
+import net.minecraft.client.gui.GuiMainMenu;
+import net.minecraft.client.gui.GuiMultiplayer;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityAgeable;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.item.EntityXPOrb;
 import net.minecraft.entity.monster.EntityIronGolem;
 import net.minecraft.entity.passive.EntityAmbientCreature;
 import net.minecraft.entity.passive.EntitySquid;
 import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemStack;
+import net.minecraft.network.play.client.CPacketCreativeInventoryAction;
 import net.minecraft.network.play.client.CPacketEntityAction;
 import net.minecraft.network.play.client.CPacketPlayer;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.potion.Potion;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Vec3i;
+import org.lwjgl.opengl.Display;
 
-import java.lang.reflect.Field;
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.Random;
+import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 
 public class Utils {
-    public static Field pressed;
-    private static Field modifiersField;
-
-    public static float[] rotationsToBlock = null;
-    private static final Random RANDOM = new Random();
-
-    public static List<Block> emptyBlocks;
-    public static List<Block> rightclickableBlocks;
-
-    static {
-        emptyBlocks = Arrays.asList(Blocks.AIR, Blocks.FLOWING_LAVA, Blocks.LAVA, Blocks.FLOWING_WATER, Blocks.WATER, Blocks.VINE, Blocks.SNOW_LAYER, Blocks.TALLGRASS, Blocks.FIRE);
-        rightclickableBlocks = Arrays.asList(Blocks.CHEST, Blocks.TRAPPED_CHEST, Blocks.ENDER_CHEST, Blocks.WHITE_SHULKER_BOX, Blocks.ORANGE_SHULKER_BOX, Blocks.MAGENTA_SHULKER_BOX, Blocks.LIGHT_BLUE_SHULKER_BOX, Blocks.YELLOW_SHULKER_BOX, Blocks.LIME_SHULKER_BOX, Blocks.PINK_SHULKER_BOX, Blocks.GRAY_SHULKER_BOX, Blocks.SILVER_SHULKER_BOX, Blocks.CYAN_SHULKER_BOX, Blocks.PURPLE_SHULKER_BOX, Blocks.BLUE_SHULKER_BOX, Blocks.BROWN_SHULKER_BOX, Blocks.GREEN_SHULKER_BOX, Blocks.RED_SHULKER_BOX, Blocks.BLACK_SHULKER_BOX, Blocks.ANVIL, Blocks.WOODEN_BUTTON, Blocks.STONE_BUTTON, Blocks.UNPOWERED_COMPARATOR, Blocks.UNPOWERED_REPEATER, Blocks.POWERED_REPEATER, Blocks.POWERED_COMPARATOR, Blocks.OAK_FENCE_GATE, Blocks.SPRUCE_FENCE_GATE, Blocks.BIRCH_FENCE_GATE, Blocks.JUNGLE_FENCE_GATE, Blocks.DARK_OAK_FENCE_GATE, Blocks.ACACIA_FENCE_GATE, Blocks.BREWING_STAND, Blocks.DISPENSER, Blocks.DROPPER, Blocks.LEVER, Blocks.NOTEBLOCK, Blocks.JUKEBOX, Blocks.BEACON, Blocks.BED, Blocks.FURNACE, Blocks.OAK_DOOR, Blocks.SPRUCE_DOOR, Blocks.BIRCH_DOOR, Blocks.JUNGLE_DOOR, Blocks.ACACIA_DOOR, Blocks.DARK_OAK_DOOR, Blocks.CAKE, Blocks.ENCHANTING_TABLE, Blocks.DRAGON_EGG, Blocks.HOPPER, Blocks.REPEATING_COMMAND_BLOCK, Blocks.COMMAND_BLOCK, Blocks.CHAIN_COMMAND_BLOCK, Blocks.CRAFTING_TABLE);
-        try {
-            modifiersField = Field.class.getDeclaredField("modifiers");
-            modifiersField.setAccessible(true);
-        } catch (Exception ignored) {
-        }
-    }
-
     public static double[] directionSpeed(double speed) {
         float forward = Wrapper.INSTANCE.mc().player.movementInput.moveForward;
         float side = Wrapper.INSTANCE.mc().player.movementInput.moveStrafe;
@@ -98,16 +88,6 @@ public class Utils {
         };
     }
 
-    public static float[] calcAngle(Vec3d from, Vec3d to) {
-        final double difX = to.x - from.x;
-        final double difY = (to.y - from.y) * -1.0F;
-        final double difZ = to.z - from.z;
-
-        final double dist = MathHelper.sqrt(difX * difX + difZ * difZ);
-
-        return new float[]{(float) MathHelper.wrapDegrees(Math.toDegrees(Math.atan2(difZ, difX)) - 90.0f), (float) MathHelper.wrapDegrees(Math.toDegrees(Math.atan2(difY, dist)))};
-    }
-
     public static float updateRotation(float PlayerRotation, float Modified, float MaxValueAccepted) {
         float degrees = MathHelper.wrapDegrees(Modified - PlayerRotation);
         if (MaxValueAccepted != 0) {
@@ -121,35 +101,51 @@ public class Utils {
         return PlayerRotation + degrees;
     }
 
-    public static boolean isBlockEmpty(BlockPos pos) {
+    static final String PNG16 = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAWlBMVEUAAAAcTX4Ao8EhL2EDjsEEW5ABVYsgLV8Co8MXSXsNUYQJcJ4HlL0DiLIBj78LUIQDjbwPU4IBjL0cM2QFbqIEeKkCpcIGcqUDrMQAir4eLF4BUYcEcKIVPG+aW6eOAAAAGXRSTlMACf1+ff7JulQVZC0b+/KwmvfQ0H9EzsqNOi43JAAAAJlJREFUGNNNztkSgyAMBdCQGkQWcbcR+P/fbCja6X1KzkwWcNZaD994Y4yDjRJNDSbEYKHLiUZTezMizi/oOBMfXgYWxnxV4Mz4hlqE0iAwo9lHDvPV4JwYjzNTXG+IbkGkpF1skHslB2jelW47qFfyAm3wQBHwix4EUoV8CcDuoEIRoAqSB7byD+kFdl1/ELW2oIZhgDtSqg8YGgqZZV00CQAAAABJRU5ErkJggg==";
+    static final String PNG32 = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAARVBMVEUAAAAibpsDjsAhL2AAocAGV4ojMWMKapsJjrYJVYgFmsMBqsQCVYoEjL4Mg7MHU4gAi78eK14CU4gAqsMDYJMDdqoWOm1sXDZmAAAAEHRSTlMADsXI/KKSaj3IfI+OrCjjAYTALgAAASZJREFUOMuF0NGugyAQRdGhBVHb6oDA/3/qPTNSVJJez5OBFXeU7uffuvF6Or50nsg8UsTSw1CbnG4yOxk85ijj1/l+ZgXpKYCTvIHteAqwAi47yEkAt4icsUUghh1wVrDNXzAzswTCF3ASYBGpAcwicIAsgLc9Yj4KEGgAQgEiGpAh0IAKfatEFtblcoC2DZE9kPMarsDJuUXE4zKl+HZXkIelfjsuscm4ayIN5LVh9X4dqQNlIELEVuCJXDyDHAAQqcAZAeUEogCJAGigBwVAf5EFQEBBbAAFBXgGQKCC0kBUgI1s07pQBbGBUoFEkqceoNCA+Tg6QKkgHoAW0wBWQVFwrAcp/ARFQfwNooJyA6bwD5gAhqfM98BPMv2rRtcDU49v9wetJCCntwu3NQAAAABJRU5ErkJggg==";
+
+    public static void loadIconsOnFrames() {
         try {
-            if (emptyBlocks.contains(Wrapper.mc.world.getBlockState(pos).getBlock())) {
-                AxisAlignedBB box = new AxisAlignedBB(pos);
-                for (Entity entity : Wrapper.mc.world.loadedEntityList) {
-                    if (((entity instanceof EntityLivingBase) || box.intersects(entity.getEntityBoundingBox())))
-                        return true;
-                }
+            byte[] imageBytes = javax.xml.bind.DatatypeConverter.parseBase64Binary(PNG16);
+            byte[] imageBytes2 = javax.xml.bind.DatatypeConverter.parseBase64Binary(PNG32);
+            BufferedImage img = ImageIO.read(new ByteArrayInputStream(imageBytes));
+            BufferedImage img2 = ImageIO.read(new ByteArrayInputStream(imageBytes2));
+            System.out.println("Loading current icons for Method");
+            Display.setIcon(new ByteBuffer[]{IconLoad(img), IconLoad(img2)});
+            Frame[] frames = Frame.getFrames();
+            if (frames != null) {
+                final List<Image> icons = Arrays.asList(img, img2);
+                Arrays.stream(frames).forEach(frame -> {
+                    try {
+                        frame.setIconImages(icons);
+                    } catch (Throwable throwable) {
+                        throwable.printStackTrace();
+                    }
+                });
             }
-        } catch (Exception ignored) {
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        return false;
     }
 
-    public static boolean trytoplace(BlockPos target_pos) {
-        boolean should_try_place = true;
+    private static ByteBuffer IconLoad(final BufferedImage icon) {
+        final int[] rgb = icon.getRGB(0, 0, icon.getWidth(), icon.getHeight(), null, 0, icon.getWidth());
+        final ByteBuffer buffer = ByteBuffer.allocate(4 * rgb.length);
+        Arrays.stream(rgb).map(color -> color << 8 | ((color >> 24) & 0xFF)).forEach(buffer::putInt);
+        buffer.flip();
+        return buffer;
+    }
 
-        if (!Wrapper.mc.world.getBlockState(target_pos).getMaterial().isReplaceable())
-            should_try_place = false;
+    public static void addEffect(int id, int duration, int amplifier) {
+        Wrapper.mc.player.addPotionEffect(new PotionEffect(Objects.requireNonNull(Potion.getPotionById(id)), duration, amplifier));
+    }
 
-        for (final Entity entity : Wrapper.mc.world.getEntitiesWithinAABBExcludingEntity(null, new AxisAlignedBB(target_pos))) {
+    public static void removeEffect(int id) {
+        Wrapper.mc.player.removePotionEffect(Objects.requireNonNull(Potion.getPotionById(id)));
+    }
 
-            if (!(entity instanceof EntityItem) && !(entity instanceof EntityXPOrb)) {
-                should_try_place = false;
-                break;
-            }
-
-        }
-        return should_try_place;
+    public static void clearEffects() {
+        Wrapper.mc.player.getActivePotionEffects().forEach(effect -> Wrapper.mc.player.removePotionEffect(effect.getPotion()));
     }
 
     public static Vec3d interpolateEntity(Entity entity, float time) {
@@ -158,156 +154,50 @@ public class Utils {
                 entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * time);
     }
 
-    public static boolean placeBlock(BlockPos pos, boolean rotate, Setting s) {
-        if (isBlockEmpty(pos)) {
-            EnumFacing[] facings = EnumFacing.values();
-            for (EnumFacing f : facings) {
-                Block neighborBlock = Wrapper.mc.world.getBlockState(pos.offset(f)).getBlock();
-                Vec3d vec = new Vec3d(pos.getX() + 0.5D + (double) f.getXOffset() * 0.5D, pos.getY() + 0.5D + (double) f.getYOffset() * 0.5D, pos.getZ() + 0.5D + (double) f.getZOffset() * 0.5D);
-
-                if (!emptyBlocks.contains(neighborBlock) && Wrapper.mc.player.getPositionEyes(Wrapper.mc.getRenderPartialTicks()).distanceTo(vec) <= 4.25D) {
-                    float[] rot = new float[]{Wrapper.mc.player.rotationYaw, Wrapper.mc.player.rotationPitch};
-
-                    if (rotate) {
-                        final float[] array = Utils.getNeededRotations(vec, 0, 0);
-                        Wrapper.mc.player.connection.sendPacket(new CPacketPlayer.Rotation(array[0], array[1], Wrapper.mc.player.onGround));
-                    }
-
-                    if (rightclickableBlocks.contains(neighborBlock)) {
-                        Wrapper.mc.player.connection.sendPacket(new CPacketEntityAction(Wrapper.mc.player, CPacketEntityAction.Action.START_SNEAKING));
-                    }
-
-                    Wrapper.mc.playerController.processRightClickBlock(Wrapper.mc.player, Wrapper.mc.world, pos.offset(f), f.getOpposite(), new Vec3d(pos), EnumHand.MAIN_HAND);
-                    if (rightclickableBlocks.contains(neighborBlock)) {
-                        Wrapper.mc.player.connection.sendPacket(new CPacketEntityAction(Wrapper.mc.player, CPacketEntityAction.Action.STOP_SNEAKING));
-                    }
-
-                    if (rotate) {
-                        Wrapper.mc.player.connection.sendPacket(new CPacketPlayer.Rotation(rot[0], rot[1], Wrapper.mc.player.onGround));
-                    }
-
-
-                    if (s.getValString().equalsIgnoreCase("Mainhand") || s.getValString().equalsIgnoreCase(("Both"))) {
-                        Wrapper.mc.player.swingArm(EnumHand.MAIN_HAND);
-                    }
-                    if (s.getValString().equalsIgnoreCase(("Offhand")) || s.getValString().equalsIgnoreCase(("Both"))) {
-                        Wrapper.mc.player.swingArm(EnumHand.OFF_HAND);
-                    }
-
-                    return true;
-                }
-            }
-
-        }
-
-        return false;
-    }
-
-
-    public enum ValidResult {
-        NoEntityCollision,
-        AlreadyBlockThere,
-        NoNeighbors,
-        Ok,
-    }
-
-    public static ValidResult valid(BlockPos pos) {
-        // There are no entities to block placement,
-        if (!Wrapper.mc.world.checkNoEntityCollision(new AxisAlignedBB(pos)))
-            return ValidResult.NoEntityCollision;
-
-        if (!checkForNeighbours(pos))
-            return ValidResult.NoNeighbors;
-
-        IBlockState blockState = Wrapper.mc.world.getBlockState(pos);
-
-        if (blockState.getBlock() == Blocks.AIR) {
-            final BlockPos[] l_Blocks =
-                    {pos.north(), pos.south(), pos.east(), pos.west(), pos.up(), pos.down()};
-
-            for (BlockPos l_Pos : l_Blocks) {
-                IBlockState l_State2 = Wrapper.mc.world.getBlockState(l_Pos);
-
-                if (l_State2.getBlock() == Blocks.AIR)
-                    continue;
-
-                for (final EnumFacing side : EnumFacing.values()) {
-                    final BlockPos neighbor = pos.offset(side);
-
-                    if (Wrapper.mc.world.getBlockState(neighbor).getBlock().canCollideCheck(Wrapper.mc.world.getBlockState(neighbor), false)) {
-                        return ValidResult.Ok;
-                    }
-                }
-            }
-
-            return ValidResult.NoNeighbors;
-        }
-
-        return ValidResult.AlreadyBlockThere;
-    }
-
-    public static boolean checkForNeighbours(final BlockPos blockPos) {
-        if (!hasNeighbour(blockPos)) {
-            for (final EnumFacing side : EnumFacing.values()) {
-                final BlockPos neighbour = blockPos.offset(side);
-                if (hasNeighbour(neighbour)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        return true;
-    }
-
-    private static boolean hasNeighbour(final BlockPos blockPos) {
-        for (final EnumFacing side : EnumFacing.values()) {
-            final BlockPos neighbour = blockPos.offset(side);
-            if (!Wrapper.mc.world.getBlockState(neighbour).getMaterial().isReplaceable()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-
     public static int random(int min, int max) {
-        return RANDOM.nextInt(max - min) + min;
+        return ThreadLocalRandom.current().nextInt(min, max);
     }
 
+    public static void updateFirstEmptySlot(ItemStack stack) {
+        int slot = 0;
+        boolean slotFound = false;
+        for (int i = 0; i < 36; i++) {
+            if (Wrapper.mc.player.inventory.getStackInSlot(i).isEmpty()) {
+                slot = i;
+                slotFound = true;
+                break;
+            }
+        }
+        if (!slotFound) {
+            ChatUtils.warning("Could not find empty slot. Operation has been aborted.");
+            return;
+        }
 
-    public static void faceVectorPacket(Vec3d vec) {
-        float[] rotations = getNeededRotations(vec, 0, 0);
-        EntityPlayerSP pl = Minecraft.getMinecraft().player;
+        int convertedSlot = slot;
+        if (slot < 9)
+            convertedSlot += 36;
 
-        float preYaw = pl.rotationYaw;
-        float prePitch = pl.rotationPitch;
+        if (stack.getCount() > 64) {
+            ItemStack passStack = stack.copy();
+            stack.setCount(64);
+            passStack.setCount(passStack.getCount() - 64);
+            Wrapper.mc.player.inventory.setInventorySlotContents(slot, stack);
+            Objects.requireNonNull(Wrapper.mc.getConnection()).sendPacket(new CPacketCreativeInventoryAction(convertedSlot, stack));
+            updateFirstEmptySlot(passStack);
+            return;
+        }
 
-        pl.rotationYaw = rotations[0];
-        pl.rotationPitch = rotations[1];
-        pl.onUpdateWalkingPlayer();
-
-
-        pl.rotationYaw = preYaw;
-        pl.rotationPitch = prePitch;
+        (Objects.requireNonNull(Wrapper.mc.getConnection())).sendPacket(new CPacketCreativeInventoryAction(convertedSlot, stack));
     }
+
 
     public static boolean isMoving(Entity e) {
         return e.motionX != 0.0 && e.motionZ != 0.0 && e.motionY != 0.0;
     }
 
-    public static boolean isMovinginput() {
-        return Wrapper.INSTANCE.mc().player.movementInput.moveForward != 0.0F || Wrapper.INSTANCE.mc().player.movementInput.moveStrafe != 0.0F;
-    }
-
-    public static boolean canBeClicked(final BlockPos pos) {
-        return Wrapper.INSTANCE.world().getBlockState(pos).getBlock().canCollideCheck(Wrapper.INSTANCE.world().getBlockState(pos), false);
-    }
-
-
     public static boolean isLiving(Entity e) {
         return e instanceof EntityLivingBase;
     }
-
 
     public static boolean isPassive(Entity e) {
         if (e instanceof EntityWolf && ((EntityWolf) e).isAngry()) return false;
@@ -316,84 +206,86 @@ public class Utils {
         return e instanceof EntityIronGolem && ((EntityIronGolem) e).getRevengeTarget() == null;
     }
 
+    public static boolean ScaledMouseCheck(double mouseX, double mouseY, double minX, double minY, double maxX, double maxY) {
+        double minXf = minX * (Minecraft.getMinecraft().displayWidth / 1920.0);
+        double minYf = minY * (Minecraft.getMinecraft().displayHeight / 1027.0);
+        double maxXf = (maxX + minX) * (Minecraft.getMinecraft().displayWidth / 1920.0);
+        double maxYf = (maxY + minY) * (Minecraft.getMinecraft().displayHeight / 1027.0);
+        return mouseX > minXf && mouseX < maxXf && mouseY > minYf && mouseY < maxYf;
+    }
 
     public static Vec3d getEyesPos() {
         return new Vec3d(Wrapper.INSTANCE.player().posX, Wrapper.INSTANCE.player().posY + Wrapper.INSTANCE.player().getEyeHeight(), Wrapper.INSTANCE.player().posZ);
     }
 
-    public static void faceVectorPacketInstant(final Vec3d vec) {
-        Utils.rotationsToBlock = getNeededRotations(vec, 0, 0);
-    }
+    public static void teleportToPosition(Vec3d endPosition) {
+        boolean wasSneaking = Wrapper.INSTANCE.player().isSneaking();
+        if (wasSneaking)
+            Wrapper.INSTANCE.sendPacket(new CPacketEntityAction(Wrapper.INSTANCE.player(), CPacketEntityAction.Action.STOP_SNEAKING));
+        double startX = Minecraft.getMinecraft().player.posX;
+        double startY = Minecraft.getMinecraft().player.posY;
+        double startZ = Minecraft.getMinecraft().player.posZ;
 
-    public static void teleportToPosition(double[] startPosition, double[] endPosition, double setOffset, double slack, boolean extendOffset, boolean onGround) {
-        boolean wasSneaking = false;
-
-        if (Wrapper.INSTANCE.player().isSneaking())
-            wasSneaking = true;
-
-        double startX = startPosition[0];
-        double startY = startPosition[1];
-        double startZ = startPosition[2];
-
-        double endX = endPosition[0];
-        double endY = endPosition[1];
-        double endZ = endPosition[2];
+        double endX = endPosition.x + 0.5F;
+        double endY = endPosition.y + getOffset(new BlockPos(endPosition.x, endPosition.y, endPosition.z)) + 1.0F;
+        double endZ = endPosition.z + 0.5F;
 
         double distance = Math.abs(startX - startY) + Math.abs(startY - endY) + Math.abs(startZ - endZ);
 
         int count = 0;
-        while (distance > slack) {
+
+        while (distance > 0) {
             distance = Math.abs(startX - endX) + Math.abs(startY - endY) + Math.abs(startZ - endZ);
 
             if (count > 120) {
                 break;
             }
 
-            double offset = extendOffset && (count & 0x1) == 0 ? setOffset + 0.15D : setOffset;
+            double offset = (count & 0x1) == 0 ? .25 + 0.15D : .25;
 
             double diffX = startX - endX;
             double diffY = startY - endY;
             double diffZ = startZ - endZ;
 
             final double min = Math.min(Math.abs(diffX), offset);
-            if (diffX < 0.0D) {
-                startX += min;
-            }
-            if (diffX > 0.0D) {
-                startX -= min;
-            }
+            if (diffX < 0.0D) startX += min;
+            if (diffX > 0.0D) startX -= min;
             final double min2 = Math.min(Math.abs(diffY), offset);
-            if (diffY < 0.0D) {
-                startY += min2;
-            }
-            if (diffY > 0.0D) {
-                startY -= min2;
-            }
+            if (diffY < 0.0D) startY += min2;
+            if (diffY > 0.0D) startY -= min2;
             double min1 = Math.min(Math.abs(diffZ), offset);
-            if (diffZ < 0.0D) {
-                startZ += min1;
-            }
-            if (diffZ > 0.0D) {
-                startZ -= min1;
-            }
+            if (diffZ < 0.0D) startZ += min1;
+            if (diffZ > 0.0D) startZ -= min1;
 
-            if (wasSneaking) {
-                Wrapper.INSTANCE.sendPacket(new CPacketEntityAction(Wrapper.INSTANCE.player(), CPacketEntityAction.Action.STOP_SNEAKING));
-            }
-            Objects.requireNonNull(Wrapper.INSTANCE.mc().getConnection()).getNetworkManager().sendPacket(new CPacketPlayer.Position(startX, startY, startZ, onGround));
+            Objects.requireNonNull(Wrapper.INSTANCE.mc().getConnection()).getNetworkManager().sendPacket(new CPacketPlayer.Position(startX, startY, startZ, true));
             count++;
         }
 
         if (wasSneaking) {
             Wrapper.INSTANCE.sendPacket(new CPacketEntityAction(Wrapper.INSTANCE.player(), CPacketEntityAction.Action.START_SNEAKING));
         }
-
     }
+
+    public static double getOffset(BlockPos pos) {
+        IBlockState state = Minecraft.getMinecraft().world.getBlockState(pos);
+        Block block = state.getBlock();
+
+        double offset = 0;
+
+        double offsety = 1 - block.getSelectedBoundingBox(state, Minecraft.getMinecraft().world, pos).maxY;
+
+        if (block.getSelectedBoundingBox(state, Minecraft.getMinecraft().world, pos).maxY == 1.0 && !block.isFullCube(state)) {
+            offsety = 1;
+        }
+        offset -= offsety;
+
+        return offset;
+    }
+
 
     public static boolean isBlockMaterial(BlockPos blockPos, Block block) {
-        return Wrapper.INSTANCE.world().getBlockState(blockPos).getBlock() == Blocks.AIR;
+        return Wrapper.INSTANCE.world().getBlockState(blockPos).getBlock() == block;
     }
-
 
     public static String getPlayerName(EntityPlayer player) {
         player.getGameProfile();
@@ -447,46 +339,38 @@ public class Utils {
                 && Wrapper.INSTANCE.mc().currentScreen == null;
     }
 
-
-    public static float getPitch(Entity entity) {
-        double y = entity.posY - Wrapper.INSTANCE.player().posY;
-        y /= Wrapper.INSTANCE.player().getDistance(entity);
-        double pitch = Math.asin(y) * 57.29577951308232;
-        pitch = -pitch;
-        return (float) pitch;
-    }
-
-    public static float getYaw(Entity entity) {
-        double x = entity.posX - Wrapper.INSTANCE.player().posX;
-        double z = entity.posZ - Wrapper.INSTANCE.player().posZ;
-        double yaw = Math.atan2(x, z) * 57.29577951308232;
-        yaw = -yaw;
-        return (float) yaw;
+    public static void Quit() {
+        boolean flag = Wrapper.INSTANCE.mc().isIntegratedServerRunning();
+        Minecraft.getMinecraft().world.sendQuittingDisconnectingPacket();
+        Wrapper.INSTANCE.mc().loadWorld(null);
+        if (flag) {
+            Wrapper.INSTANCE.mc().displayGuiScreen(new GuiMainMenu());
+        } else {
+            Wrapper.INSTANCE.mc().displayGuiScreen(new GuiMultiplayer(new GuiMainMenu()));
+        }
     }
 
 
-    public static float getDirection() {
-        float var1 = Wrapper.INSTANCE.player().rotationYaw;
-        if (Wrapper.INSTANCE.player().moveForward < 0.0F) {
-            var1 += 180.0F;
-        }
-        float forward = 1.0F;
-        if (Wrapper.INSTANCE.player().moveForward < 0.0F) {
-            forward = -0.5F;
-        } else if (Wrapper.INSTANCE.player().moveForward > 0.0F) {
-            forward = 0.5F;
-        }
-        if (Wrapper.INSTANCE.player().moveStrafing > 0.0F) {
-            var1 -= 90.0F * forward;
-        }
-        if (Wrapper.INSTANCE.player().moveStrafing < 0.0F) {
-            var1 += 90.0F * forward;
-        }
-        var1 *= 0.017453292F;
-        return var1;
+    public static EntityPlayer createPlayer(EntityPlayer entityPlayer, String name, boolean spawnWorld) {
+        GameProfile profile;
+        if (!name.equals(entityPlayer.getName()))
+            profile = new GameProfile(UUID.randomUUID(), name);
+        else
+            profile = entityPlayer.getGameProfile();
+        EntityOtherPlayerMP otherPlayerMP = new EntityOtherPlayerMP(Wrapper.mc.world, profile);
+
+        otherPlayerMP.setPosition(entityPlayer.posX, entityPlayer.posY, entityPlayer.posZ);
+        otherPlayerMP.inventory = entityPlayer.inventory;
+        otherPlayerMP.rotationPitch = entityPlayer.rotationPitch;
+        otherPlayerMP.rotationYaw = entityPlayer.rotationYaw;
+        otherPlayerMP.rotationYawHead = entityPlayer.rotationYawHead;
+        if (spawnWorld)
+            Wrapper.mc.world.spawnEntity(otherPlayerMP);
+        else otherPlayerMP.setInvisible(true);
+        return otherPlayerMP;
     }
 
-    public static int getDistanceFromMouse(final EntityLivingBase entity) {
+    public static int fovDistanceFromMouse(final EntityLivingBase entity) {
         final float[] neededRotations = getNeededRotations(entity.getPositionVector(), 0, 0);
         final float neededYaw = Wrapper.INSTANCE.player().rotationYaw - neededRotations[0];
         final float neededPitch = Wrapper.INSTANCE.player().rotationPitch - neededRotations[1];
@@ -495,4 +379,14 @@ public class Utils {
     }
 
 
+    public static class PlaceLocation extends Vec3i {
+        public double damage;
+        public double Timeset;
+
+        public PlaceLocation(double xIn, double yIn, double zIn, double v) {
+            super(xIn, yIn, zIn);
+            this.damage = v;
+            this.Timeset = 0;
+        }
+    }
 }

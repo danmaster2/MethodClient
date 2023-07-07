@@ -5,7 +5,7 @@ import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
 import Method.Client.utils.TimerUtils;
-import net.minecraft.block.Block;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -28,9 +28,9 @@ public class Parkour extends Module {
     Setting Nearedge = setmgr.add(new Setting("Nearedge", this, .001, 0, .01, false));
     Setting autodrop = setmgr.add(new Setting("autodrop", this, false));
     Setting runsinglegap = setmgr.add(new Setting("Run Single Gap", this, false));
-    Setting FullBlock = setmgr.add(new Setting("All Full Blocks", this, false));
-    public static List<Block> pospoint5;
-    public static List<Block> Replace;
+    Setting FullBlock = setmgr.add(new Setting("All Full Block", this, false));
+    public static List<net.minecraft.block.Block> pospoint5;
+    public static List<net.minecraft.block.Block> Replace;
     BlockPos playerPos;
 
     @Override
@@ -39,7 +39,7 @@ public class Parkour extends Module {
         pospoint5 = Arrays.asList(Blocks.ACACIA_FENCE, Blocks.OAK_FENCE, Blocks.SPRUCE_FENCE, Blocks.BIRCH_FENCE, Blocks.JUNGLE_FENCE, Blocks.DARK_OAK_FENCE, Blocks.ACACIA_FENCE, Blocks.OAK_FENCE_GATE, Blocks.SPRUCE_FENCE_GATE, Blocks.BIRCH_FENCE_GATE, Blocks.JUNGLE_FENCE_GATE, Blocks.DARK_OAK_FENCE_GATE, Blocks.ACACIA_FENCE_GATE, Blocks.NETHER_BRICK_FENCE, Blocks.COBBLESTONE_WALL);
     }
 
-    @Override
+    @Subscribe
     public void onLivingUpdate(LivingEvent.LivingUpdateEvent event) {
         if (FullBlock.getValBoolean() && Delayer.isDelay(200)) {
             for (BlockPos b : BlockPos.getAllInBox((int) mc.player.posX - 5, (int) mc.player.posY - 5, (int) mc.player.posZ - 5, (int) mc.player.posX + 5, (int) mc.player.posY + 5, (int) mc.player.posZ + 5)) {

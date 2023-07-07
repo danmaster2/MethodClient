@@ -8,6 +8,7 @@ import Method.Client.utils.TimerUtils;
 import Method.Client.utils.system.Connection;
 import Method.Client.utils.system.Wrapper;
 import Method.Client.utils.visual.ChatUtils;
+import com.google.common.eventbus.Subscribe;
 import io.netty.buffer.Unpooled;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Items;
@@ -86,7 +87,7 @@ public class ServerCrash extends Module {
         this.longdong = 15000L;
     }
 
-    @Override
+    @Subscribe
     public void onClientTick(TickEvent.ClientTickEvent event) {
         disableSafeGuard = true;
         new PacketBuffer(Unpooled.buffer().writeByte(Integer.MAX_VALUE));
@@ -262,9 +263,9 @@ public class ServerCrash extends Module {
             }
         }
 
-        if (this.timer.hasReached(this.longdong) && AutoDisable.getValBoolean()) {
+        if (this.timer.isDelay(this.longdong) && AutoDisable.getValBoolean()) {
             this.setToggled(false);
-            this.timer.reset();
+            this.timer.setLastMS();
         }
 
         if (JustOnce.getValBoolean() && !mode.getValString().equalsIgnoreCase(("MC|BrandModifier"))) {
@@ -283,7 +284,7 @@ public class ServerCrash extends Module {
             }
         }
 
-        if (this.timer.hasReached(this.longdong) && AutoDisable.getValBoolean()) {
+        if (this.timer.isDelay(this.longdong) && AutoDisable.getValBoolean()) {
             if (packet instanceof SPacketJoinGame) {
                 this.setToggled(false);
             }

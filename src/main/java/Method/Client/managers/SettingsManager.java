@@ -9,8 +9,7 @@ import java.util.stream.Collectors;
 
 public class SettingsManager {
 
-    private final ArrayList<Setting> settings= new ArrayList<>();
-
+    private final ArrayList<Setting> settings = new ArrayList<>();
 
     public Setting add(Setting in) {
         this.settings.add(in);
@@ -25,17 +24,6 @@ public class SettingsManager {
         return (ArrayList<Setting>) this.settings.stream().filter(s -> s.getParentMod().equals(mod)).collect(Collectors.toList());
     }
 
-    public void setSettingsByMod(Module mod, ArrayList<Setting> change) {
-        for (Setting s : settings) {
-            if (s.getParentMod().equals(mod)) {
-                for (Setting Inputsetting : change) {
-                    if (s.getName().equalsIgnoreCase(Inputsetting.getName())) {
-                        s.setall(Inputsetting);
-                    }
-                }
-            }
-        }
-    }
 
     public Setting getSettingByName(String name) {
         for (Setting set : getSettings()) {
@@ -45,5 +33,23 @@ public class SettingsManager {
         }
         System.err.println("[" + Main.NAME + "] Error Setting NOT found: '" + name + "'!");
         return null;
+    }
+
+    public Setting getSettingByModName(Module module, String name) {
+        for (Setting set : getSettingsByMod(module)) {
+            if (set.getName().equalsIgnoreCase(name)) {
+                return set;
+            }
+        }
+        System.err.println("[" + Main.NAME + "] Error Setting NOT found: '" + name + "'!");
+        return null;
+    }
+
+    public void remove(Setting setting) {
+        this.settings.remove(setting);
+    }
+    public void removeAllMod(Module module) {
+        ArrayList<Setting> Remove = new ArrayList<>(getSettingsByMod(module));
+        this.settings.removeAll(Remove);
     }
 }

@@ -6,6 +6,7 @@ import Method.Client.module.Category;
 import Method.Client.module.Module;
 import Method.Client.utils.system.Connection;
 import Method.Client.utils.visual.ChatUtils;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -35,7 +36,7 @@ public class VanishDetector extends Module {
 
     DecimalFormat decimalFormat = new DecimalFormat("0.00");
     Setting EntityMove = setmgr.add(new Setting("EntityMove", this, false));
-    Setting EntityBedloc = setmgr.add(new Setting("Entity Bed ", this, true, EntityMove, 1));
+    Setting EntityBedloc = setmgr.add(new Setting("Entity Bed ", this, true, EntityMove));
     Setting StopRemove = setmgr.add(new Setting("Stop Entity Remove", this, true));
     Setting Soundpos = setmgr.add(new Setting("Sound pos", this, false));
     Setting BlockChanges = setmgr.add(new Setting("BlockChanges", this, false));
@@ -120,7 +121,7 @@ public class VanishDetector extends Module {
         return true;
     }
 
-    @Override
+    @Subscribe
     public void onClientTick(TickEvent.ClientTickEvent event) {
         synchronized (this.Hashmap) {
             for (final Map.Entry<UUID, String> entry : this.Hashmap.entrySet()) {

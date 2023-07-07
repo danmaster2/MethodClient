@@ -5,7 +5,7 @@ import Method.Client.module.Category;
 import Method.Client.module.Module;
 import Method.Client.utils.system.Connection;
 import com.google.common.collect.Lists;
-import net.minecraft.client.gui.ChatLine;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.network.play.server.SPacketChat;
 import net.minecraft.util.text.TextComponentString;
@@ -21,19 +21,17 @@ public class Antispam extends Module {
     Setting unicode = setmgr.add(new Setting("Unicode", this, true));
     Setting broadcasts = setmgr.add(new Setting("Server Broadcasts", this, false));
     Setting spam = setmgr.add(new Setting("Repeated messages", this, true));
-    Setting deletenew = setmgr.add(new Setting("Delete Repeated", this, true, spam, 3));
-    Setting Similarity = setmgr.add(new Setting("Similarity %", this, .85, 0, 1, false, spam, 4));
+    Setting Similarity = setmgr.add(new Setting("Similarity %", this, .85, 0, 1, false, spam));
 
 
     public static List<Priorchatlist> priorchatlists = Lists.newArrayList();
     public static int line;
-    public static List<ChatLine> lastChatLine;
 
     public Antispam() {
         super("Antispam", Keyboard.KEY_NONE, Category.MISC, "Antispam");
     }
 
-    @Override
+    @Subscribe
     public void ClientChatReceivedEvent(ClientChatReceivedEvent event) {
         if (spam.getValBoolean()) {
             GuiNewChat chatinst = mc.ingameGUI.getChatGUI();
@@ -55,13 +53,11 @@ public class Antispam extends Module {
             line++;
             if (!event.isCanceled())
                 chatinst.printChatMessageWithOptionalDeletion(event.getMessage(), line);
-            if (line > 256) {
-                line = 0;
-                priorchatlists.clear();
+            if (priorchatlists.size() > 1000) {
+                priorchatlists.remove(0);
             }
             event.setCanceled(true);
         }
-        super.ClientChatReceivedEvent(event);
     }
 
 

@@ -1,18 +1,10 @@
 package Method.Client.utils.proxy.renderers;
 
-import Method.Client.module.render.ArmorRender;
 import net.minecraft.client.model.ModelBiped;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.inventory.EntityEquipmentSlot;
-import net.minecraft.item.ItemArmor;
-import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-
-import static Method.Client.utils.proxy.Overrides.ColorMix.getColorForEnchantment;
 
 @SideOnly(Side.CLIENT)
 public class ModLayerBipedArmor extends ModLayerArmorBase<ModelBiped> {

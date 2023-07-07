@@ -6,6 +6,7 @@ import Method.Client.module.Module;
 import Method.Client.utils.BlockUtils;
 import Method.Client.utils.Utils;
 import Method.Client.utils.system.Wrapper;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
@@ -36,11 +37,10 @@ public class Nuker extends Module {
     Setting Drawmode = setmgr.add(new Setting("Hole Mode", this, "Outline", BlockEspOptions()));
     Setting LineWidth = setmgr.add(new Setting("LineWidth", this, 1, 0, 3, false));
 
-    public final ArrayDeque<Set<BlockPos>> prevBlocks = new ArrayDeque<Set<BlockPos>>();
+    public final ArrayDeque<Set<BlockPos>> prevBlocks = new ArrayDeque<>();
     public BlockPos currentBlock;
-    public float progress;
-    public float prevProgress;
-    public int id;
+    public int id ;
+
 
     public Nuker() {
         super("Nuker", Keyboard.KEY_NONE, Category.PLAYER, "Nuker");
@@ -54,11 +54,11 @@ public class Nuker extends Module {
             currentBlock = null;
         }
         prevBlocks.clear();
-        id = 0;
+
         super.onDisable();
     }
 
-    @Override
+    @Subscribe
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (mc.world == null && StopOnKick.getValBoolean() && this.isToggled()) {
             this.toggle();
@@ -82,6 +82,7 @@ public class Nuker extends Module {
         if (mode.getValString().equalsIgnoreCase("id")) {
             stream = stream.filter(pos -> Block.getIdFromBlock(BlockUtils.getBlock(pos)) == id);
         }
+
         List<BlockPos> blocks = stream.collect(Collectors.toList());
 
         if (mc.player.capabilities.isCreativeMode) {
@@ -103,9 +104,11 @@ public class Nuker extends Module {
             }
 
             Wrapper.INSTANCE.controller().resetBlockRemoving();
-            progress = 1;
-            prevProgress = 1;
-            BlockUtils.breakBlocksPacketSpam(blocks2);
+
+
+            for (BlockPos blockPos : blocks2) {
+                BlockUtils.breakBlockPacketSpam(blockPos);
+            }
             return;
         }
 
@@ -118,38 +121,24 @@ public class Nuker extends Module {
         if (currentBlock == null) {
             Wrapper.INSTANCE.controller().resetBlockRemoving();
         }
-
-        if (currentBlock != null && BlockUtils.getHardness(currentBlock) < 1) {
-            prevProgress = progress;
-        }
-
-        progress = mc.playerController.curBlockDamageMP;
-
-        if (progress < prevProgress) {
-            prevProgress = progress;
-        } else {
-            progress = 1;
-            prevProgress = 1;
-        }
-        super.onClientTick(event);
     }
 
-    @Override
+    @Subscribe
     public void onLeftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
         if (mode.getValString().equalsIgnoreCase("id") && mc.world.isRemote) {
             IBlockState blockState = BlockUtils.getState(event.getPos());
             id = Block.getIdFromBlock(blockState.getBlock());
         }
-        super.onLeftClickBlock(event);
     }
 
-    @Override
+    @Subscribe
     public void onWorldUnload(WorldEvent.Unload event) {
         if (StopOnKick.getValBoolean())
             this.toggle();
     }
 
-    @Override
+
+    @Subscribe
     public void onRenderWorldLast(RenderWorldLastEvent event) {
         if (currentBlock == null) {
             return;
@@ -161,7 +150,6 @@ public class Nuker extends Module {
                 RenderBlock(Drawmode.getValString(), Standardbb(currentBlock), idcolor.getcolor(), LineWidth.getValDouble());
             }
         }
-        super.onRenderWorldLast(event);
     }
 
 }

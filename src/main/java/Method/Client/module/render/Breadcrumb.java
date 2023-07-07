@@ -4,6 +4,7 @@ import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
 import Method.Client.utils.visual.RenderUtils;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.Vec3d;
@@ -18,14 +19,14 @@ import static Method.Client.Main.setmgr;
 
 public class Breadcrumb extends Module {
 
-    Setting tickdelay = setmgr.add( new Setting("tickdelay", this, 2, 1, 20, true));
-    Setting Color = setmgr.add( new Setting("Color", this, .4, .8, .9, 1));
-    Setting OtherColor = setmgr.add( new Setting("OtherColor", this, .8, .8, .9, 1));
-    Setting Width = setmgr.add( new Setting("Width", this, 2.5, 1, 5, false));
-    Setting BlockSnap = setmgr.add( new Setting("BlockSnap", this, false));
-    Setting OtherPlayers = setmgr.add( new Setting("OtherPlayers", this, false));
+    Setting tickdelay = setmgr.add(new Setting("tickdelay", this, 2, 1, 20, true));
+    Setting Color = setmgr.add(new Setting("Color", this, .4, .8, .9, 1));
+    Setting OtherColor = setmgr.add(new Setting("OtherColor", this, .8, .8, .9, 1));
+    Setting Width = setmgr.add(new Setting("Width", this, 2.5, 1, 5, false));
+    Setting BlockSnap = setmgr.add(new Setting("BlockSnap", this, false));
+    Setting OtherPlayers = setmgr.add(new Setting("OtherPlayers", this, false));
 
-    List<Vec3d> doubles = new ArrayList<>();
+    ArrayList<Vec3d> doubles = new ArrayList<>();
     List<OtherPos> OtherPos = new ArrayList<>();
 
     public Breadcrumb() {
@@ -42,7 +43,7 @@ public class Breadcrumb extends Module {
         }
     }
 
-    @Override
+    @Subscribe
     public void onRenderWorldLast(RenderWorldLastEvent event) {
         if (mc.player.ticksExisted % (int) tickdelay.getValDouble() == 0) {
             doubles.add(new Vec3d(mc.player.posX, mc.player.posY, mc.player.posZ));
@@ -81,7 +82,7 @@ public class Breadcrumb extends Module {
         }
 
         private final String name;
-        List<Vec3d> doubles = new ArrayList<>();
+        ArrayList<Vec3d> doubles = new ArrayList<>();
 
         public OtherPos(final String name) {
             this.name = name;

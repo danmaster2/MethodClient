@@ -3,15 +3,19 @@ package Method.Client.module.Onscreen.Display;
 import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
+import Method.Client.module.Onscreen.OnscreenGUI;
 import Method.Client.module.Onscreen.PinableFrame;
+import Method.Client.utils.visual.RenderUtils;
+import com.google.common.eventbus.Subscribe;
 import com.mojang.realmsclient.gui.ChatFormatting;
+import net.minecraft.client.gui.Gui;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.Text;
 import org.lwjgl.input.Keyboard;
 
 import java.text.DecimalFormat;
 
 import static Method.Client.Main.setmgr;
-import static net.minecraft.client.gui.Gui.drawRect;
+
 
 public final class NetherCords extends Module {
     public NetherCords() {
@@ -27,7 +31,7 @@ public final class NetherCords extends Module {
     static Setting Decimal;
     static Setting Frame;
     static Setting FontSize;
-
+    static PinableFrame pin;
     @Override
     public void setup() {
         this.visible = false;
@@ -40,47 +44,51 @@ public final class NetherCords extends Module {
         setmgr.add(Decimal = new Setting("Decimal", this, 2, 0, 5, true));
         setmgr.add(Frame = new Setting("Font", this, "Times", fontoptions()));
         setmgr.add(FontSize = new Setting("FontSize", this, 22, 10, 40, true));
+        pin = new NetherCordsRUN();
+        OnscreenGUI.pinableFrames.add(pin);
     }
 
     @Override
     public void onEnable() {
-        PinableFrame.Toggle("NetherCordsSET", true);
-
+        PinableFrame.Toggle(pin, true);
     }
 
     @Override
     public void onDisable() {
-        PinableFrame.Toggle("NetherCordsSET", false);
-
+        PinableFrame.Toggle(pin, false);
     }
 
     public static class NetherCordsRUN extends PinableFrame {
 
         public NetherCordsRUN() {
             super("NetherCordsSET", new String[]{}, (int) ypos.getValDouble(), (int) xpos.getValDouble());
+
         }
 
         DecimalFormat decimalFormat = new DecimalFormat("0.00");
 
         @Override
         public void setup() {
-            GetSetup(this, xpos, ypos, Frame, FontSize);
+            getSetup(this, xpos, ypos, Frame, FontSize);
         }
 
         @Override
         public void Ongui() {
-            GetInit(this, xpos, ypos, Frame, FontSize);
+            getInit(this, xpos, ypos, Frame, FontSize);
 
         }
 
-        @Override
+        @Subscribe
         public void onRenderGameOverlay(Text event) {
+            int posx = (int) (this.getX() * RenderUtils.simpleScale(false));
+            int posy = (int) (this.getY() * RenderUtils.simpleScale(true));
 
-            fontSelect(Frame, getCoords(), this.getX(), this.getY() + 10, TextColor.getcolor(), Shadow.getValBoolean());
+            fontSelect(Frame, getCoords(), posx, posy + 10, TextColor.getcolor(), Shadow.getValBoolean());
+
             if (background.getValBoolean())
-                drawRect(this.x, this.y + 10, this.x + widthcal(Frame, getCoords()), this.y + 20, BgColor.getcolor());
-            super.onRenderGameOverlay(event);
+                Gui.drawRect(posx, posy + 10, posx + widthcal(Frame, getCoords()), posy + 20, BgColor.getcolor());
         }
+
 
         private String getCoords() {
             decimalFormat = getDecimalFormat((int) Decimal.getValDouble());

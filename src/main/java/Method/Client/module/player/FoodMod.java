@@ -5,6 +5,7 @@ import Method.Client.module.Category;
 import Method.Client.module.Module;
 import Method.Client.utils.system.Connection;
 import Method.Client.utils.system.Wrapper;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.BlockWorkbench;
@@ -62,14 +63,14 @@ public class FoodMod extends Module {
         return true;
     }
 
-    @Override
+    @Subscribe
     public void onClientTick(ClientTickEvent event) {
         if (SetFoodLevelMax.getValBoolean()) {
             mc.player.getFoodStats().setFoodLevel(20);
         }
         if (AutoEat.getValBoolean()) {
             if (this.oldSlot == -1) {
-                if (!this.canEat()) {
+                if (this.canEat()) {
                     return;
                 }
 
@@ -91,7 +92,7 @@ public class FoodMod extends Module {
                     this.oldSlot = mc.player.inventory.currentItem;
                 }
             } else {
-                if (!this.canEat()) {
+                if (this.canEat()) {
                     this.stop();
                     return;
                 }
@@ -220,7 +221,6 @@ public class FoodMod extends Module {
             eating = 0;
 
 
-            super.onClientTick(event);
         }
     }
 
@@ -238,24 +238,20 @@ public class FoodMod extends Module {
 
     private boolean canEat() {
         if (!mc.player.canEat(false)) {
-            return false;
+            return true;
         } else {
             if (mc.objectMouseOver != null) {
                 Entity entity = mc.objectMouseOver.entityHit;
                 if (entity instanceof EntityVillager || entity instanceof EntityTameable) {
-                    return false;
+                    return true;
                 }
 
                 BlockPos pos = mc.objectMouseOver.getBlockPos();
-                if (pos != null) {
-                    Block block = mc.world.getBlockState(pos).getBlock();
-                    if (block instanceof BlockContainer || block instanceof BlockWorkbench) {
-                        return false;
-                    }
-                }
+                Block block = mc.world.getBlockState(pos).getBlock();
+                return block instanceof BlockContainer || block instanceof BlockWorkbench;
             }
 
-            return true;
+            return false;
         }
     }
 

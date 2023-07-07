@@ -19,11 +19,19 @@ public class CreativeTabArmor extends CreativeTabs {
 
     public CreativeTabArmor() {
         super("Armor");
+        this.tabLabel = "Armor";
     }
+
     @Override
     public String getTabLabel() {
         return "Armor";
     }
+
+    @Override
+    public String getTranslationKey() {
+        return "Armor";
+    }
+
     @Override
     public void displayAllRelevantItems(NonNullList<ItemStack> itemList) {
 

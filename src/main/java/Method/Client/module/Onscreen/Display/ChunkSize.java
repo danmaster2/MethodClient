@@ -3,8 +3,12 @@ package Method.Client.module.Onscreen.Display;
 import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
+import Method.Client.module.Onscreen.OnscreenGUI;
 import Method.Client.module.Onscreen.PinableFrame;
 import Method.Client.utils.TimerUtils;
+import Method.Client.utils.visual.RenderUtils;
+import com.google.common.eventbus.Subscribe;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.ChunkPos;
@@ -23,7 +27,7 @@ import java.util.concurrent.Executors;
 import java.util.zip.DeflaterOutputStream;
 
 import static Method.Client.Main.setmgr;
-import static net.minecraft.client.gui.Gui.drawRect;
+
 
 public final class ChunkSize extends Module {
     public ChunkSize() {
@@ -39,7 +43,7 @@ public final class ChunkSize extends Module {
     static Setting Frame;
     static Setting FontSize;
     static Setting Background;
-
+    static PinableFrame pin;
     public static final TimerUtils timer = new TimerUtils();
 
     public static boolean running = false;
@@ -58,8 +62,10 @@ public final class ChunkSize extends Module {
         setmgr.add(Shadow = new Setting("Shadow", this, true));
         setmgr.add(Background = new Setting("Background", this, false));
         setmgr.add(Frame = new Setting("Font", this, "Times", fontoptions()));
-        setmgr.add(xpos = new Setting("xpos", this, 200, -20, (mc.displayWidth ) + 40, true));
+        setmgr.add(xpos = new Setting("xpos", this, 200, -20, (mc.displayWidth) + 40, true));
         setmgr.add(ypos = new Setting("ypos", this, 250, -20, (mc.displayHeight) + 40, true));
+        pin = new ChunkSizeRUN();
+        OnscreenGUI.pinableFrames.add(pin);
     }
 
     AnvilChunkLoader loader;
@@ -68,10 +74,11 @@ public final class ChunkSize extends Module {
     NBTTagCompound level;
     DataOutputStream compressed;
 
+
     @Override
     public void onEnable() {
-        PinableFrame.Toggle("ChunkSizeSET", true);
-        timer.reset();
+        PinableFrame.Toggle(pin, true);
+        timer.setLastMS();
         loader = new AnvilChunkLoader(null, null);
         running = false;
         size = previousSize = 0L;
@@ -84,11 +91,11 @@ public final class ChunkSize extends Module {
 
     @Override
     public void onDisable() {
-        PinableFrame.Toggle("ChunkSizeSET", false);
+        PinableFrame.Toggle(pin, false);
     }
 
 
-    @Override
+    @Subscribe
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (running) {
             return;
@@ -140,27 +147,34 @@ public final class ChunkSize extends Module {
 
         public ChunkSizeRUN() {
             super("ChunkSizeSET", new String[]{}, (int) ypos.getValDouble(), (int) xpos.getValDouble());
+
         }
 
         @Override
         public void setup() {
-            GetSetup(this, xpos, ypos, Frame, FontSize);
+            getSetup(this, xpos, ypos, Frame, FontSize);
         }
 
         @Override
         public void Ongui() {
-            GetInit(this, xpos, ypos, Frame, FontSize);
+            getInit(this, xpos, ypos, Frame, FontSize);
         }
 
-        @Override
+        @Subscribe
         public void onRenderGameOverlay(Text event) {
             final String Size = " " + String.format("[%s | %s]", size == -1 ? "<error>" : toFormattedBytes(size), difference(size - previousSize));
 
+            int posx = (int) (this.x * RenderUtils.simpleScale(false));
+            int posy = (int) (this.y * RenderUtils.simpleScale(true));
+
             if (Background.getValBoolean())
-                drawRect(this.x, this.y + 10, this.x + widthcal(Frame, Size), this.y + 20, BgColor.getcolor());
-            fontSelect(Frame, Size, this.getX(), this.getY() + 10, TextColor.getcolor(), Shadow.getValBoolean());
-            super.onRenderGameOverlay(event);
+                Gui.drawRect(posx, posy + 10, posx + widthcal(Frame, Size), posy + 20, BgColor.getcolor());
+
+            
+            fontSelect(Frame, Size, posx, posy + 10, TextColor.getcolor(), Shadow.getValBoolean());
+            
         }
+
 
         private static String toFormattedBytes(long size) {
             NumberFormat format = NumberFormat.getInstance();

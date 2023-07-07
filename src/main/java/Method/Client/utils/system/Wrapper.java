@@ -2,7 +2,6 @@ package Method.Client.utils.system;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.multiplayer.PlayerControllerMP;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.settings.GameSettings;
@@ -15,7 +14,6 @@ import java.awt.datatransfer.StringSelection;
 
 public class Wrapper {
 
-    public static FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
     public static volatile Wrapper INSTANCE = new Wrapper();
     public static Minecraft mc = Minecraft.getMinecraft();
 
@@ -33,10 +31,6 @@ public class Wrapper {
 
     public GameSettings mcSettings() {
         return Wrapper.INSTANCE.mc().gameSettings;
-    }
-
-    public FontRenderer fontRenderer() {
-        return Wrapper.INSTANCE.mc().fontRenderer;
     }
 
     public void sendPacket(Packet packet) {

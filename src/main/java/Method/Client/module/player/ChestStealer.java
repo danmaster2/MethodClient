@@ -3,20 +3,17 @@ package Method.Client.module.player;
 import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
-import Method.Client.module.ModuleManager;
 import Method.Client.utils.TimerUtils;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.gui.inventory.GuiScreenHorseInventory;
 import net.minecraft.client.gui.inventory.GuiShulkerBox;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.ClickType;
-import net.minecraft.item.ItemShulkerBox;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import org.lwjgl.input.Keyboard;
-
-import java.util.ArrayList;
 
 import static Method.Client.Main.setmgr;
 
@@ -25,7 +22,7 @@ public class ChestStealer extends Module {
 
     Setting delay;
     Setting Entity;
-    Setting Shulker;
+    Setting AlwaysOn;
     public static Setting Mode;
 
 
@@ -35,30 +32,29 @@ public class ChestStealer extends Module {
 
     @Override
     public void setup() {
-        setmgr.add(Mode = new Setting("Mode", this, "Steal", "Steal","Store","Drop"));
+        setmgr.add(Mode = new Setting("Mode", this, "Steal", "Steal", "Store", "Drop"));
         setmgr.add(delay = new Setting("Delay", this, 3, 0, 20, true));
-        setmgr.add(Shulker = new Setting("Take Shulker", this, false));
+        setmgr.add(AlwaysOn = new Setting("AlwaysOn", this, false));
         setmgr.add(Entity = new Setting("Entitys Chest", this, true));
     }
 
 
-    @Override
+    @Subscribe
     public void onClientTick(ClientTickEvent event) {
         if (!Timer.isDelay((long) (delay.getValDouble() * 100)))
             return;
         Timer.setLastMS();
+
         if (mc.currentScreen instanceof GuiChest) {
             GuiChest guiChest = (GuiChest) mc.currentScreen;
             Quickhandle(guiChest, guiChest.lowerChestInventory.getSizeInventory());
         } else if (mc.currentScreen instanceof GuiScreenHorseInventory && Entity.getValBoolean()) {
             GuiScreenHorseInventory horseInventory = (GuiScreenHorseInventory) mc.currentScreen;
             Quickhandle(horseInventory, horseInventory.horseInventory.getSizeInventory());
-        } else if (mc.currentScreen instanceof GuiShulkerBox && Shulker.getValBoolean()) {
+        } else if (mc.currentScreen instanceof GuiShulkerBox) {
             GuiShulkerBox shulkerBox = (GuiShulkerBox) mc.currentScreen;
-            Quickhandle((GuiShulkerBox) mc.currentScreen, shulkerBox.inventory.getSizeInventory());
-        } else {
-            ModuleManager.getModuleByName("ChestStealer").toggle();
-        }
+            Quickhandle((GuiContainer) mc.currentScreen, shulkerBox.inventory.getSizeInventory());
+        } else if (!AlwaysOn.getValBoolean()) this.toggle();
     }
 
     private void Quickhandle(GuiContainer guiContainer, int size) {
@@ -68,9 +64,9 @@ public class ChestStealer extends Module {
                 HandleStoring(guiContainer.inventorySlots.windowId, size - 9);
                 return;
             }
-            if (StealorDrop(guiContainer.inventorySlots.windowId, i, stack)) {
+            if (StealorDrop(guiContainer.inventorySlots.windowId, i, stack))
                 break;
-            }
+
         }
     }
 
@@ -81,16 +77,13 @@ public class ChestStealer extends Module {
             if (itemStack.isEmpty() || itemStack.getItem() == Items.AIR)
                 continue;
 
-            if (Shulker.getValBoolean() && !(itemStack.getItem() instanceof ItemShulkerBox))
-                continue;
-
             mc.playerController.windowClick(pWindowId, i + stack, 0, ClickType.QUICK_MOVE, mc.player);
             return;
         }
     }
 
     private boolean StealorDrop(int windowId, int i, ItemStack stack) {
-        if (stack.isEmpty() || (Shulker.getValBoolean() && !(stack.getItem() instanceof ItemShulkerBox)))
+        if (stack.isEmpty())
             return false;
         if (Mode.getValString().equalsIgnoreCase("Steal")) {
             mc.playerController.windowClick(windowId, i, 0, ClickType.QUICK_MOVE, mc.player);

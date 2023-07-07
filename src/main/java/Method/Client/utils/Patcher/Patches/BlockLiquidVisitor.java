@@ -17,7 +17,6 @@ public final class BlockLiquidVisitor extends ModClassVisitor {
     }
 
 
-
     public static class canCollideCheckVisitor extends MethodVisitor {
         public canCollideCheckVisitor(MethodVisitor mv) {
             super(Opcodes.ASM4, mv);

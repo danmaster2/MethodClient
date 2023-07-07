@@ -1,15 +1,15 @@
 package Method.Client.utils.Screens;
 
+import Method.Client.Main;
+import Method.Client.utils.Screens.Override.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
-import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
 
-public class Screen {
-    protected static Minecraft mc = Minecraft.getMinecraft();
+import java.util.ArrayList;
 
+public abstract class Screen {
+    protected static final Minecraft mc = Minecraft.getMinecraft();
     public boolean visible = true;
 
     public TextFormatting ColorfromInt(int i) {
@@ -33,29 +33,25 @@ public class Screen {
         return null;
     }
 
-    public void setup() {
+    public static ArrayList<Screen> Screens = new ArrayList<>();
+
+    public static void Initalise() {
+        addScreen(new EscInsert());
+        addScreen(new SignInsert());
+        addScreen(new ChestGuiInsert());
+        addScreen(new ShulkerGuiInsert());
+        addScreen(new BookInsert());
+        addScreen(new DisconnectedInsert());
+        addScreen(new ConnectingInsert());
     }
 
-    public void GuiOpen(GuiOpenEvent event) {
-    }
-
-    public void GuiScreenEventPost(GuiScreenEvent.ActionPerformedEvent.Post event) {
-    }
-
-    public void GuiScreenEventInit(GuiScreenEvent.InitGuiEvent.Post event) {
-    }
-
-
-
-    public void GuiScreenEventPre(GuiScreenEvent.ActionPerformedEvent.Pre event) {
-    }
-
-    public void onClientTick(TickEvent.ClientTickEvent event) {
+    public static void addScreen(Screen m) {
+        if (Screens.contains(m)) return;
+        Screens.add(m);
+        Main.eventBus.register(m);
     }
 
     public void DrawScreenEvent(GuiScreenEvent.DrawScreenEvent event) {
     }
 
-    public void onWorldUnload(WorldEvent.Unload event) {
-    }
 }

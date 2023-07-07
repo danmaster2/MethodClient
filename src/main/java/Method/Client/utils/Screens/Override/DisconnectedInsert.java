@@ -1,6 +1,7 @@
 package Method.Client.utils.Screens.Override;
 
 import Method.Client.utils.Screens.Screen;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiDisconnected;
 import net.minecraft.client.gui.GuiMainMenu;
@@ -27,15 +28,21 @@ public class DisconnectedInsert extends Screen {
     public static int ping = 0;
 
 
-    @Override
+    @Subscribe
     public void onWorldUnload(WorldEvent.Unload event) {
         ServerData data = mc.getCurrentServerData();
         if (data != null)
             lastserver = data;
     }
 
+    @Subscribe
+    public void onWorldLoad(WorldEvent.Load event) {
+        ServerData data = mc.getCurrentServerData();
+        if (data != null)
+            lastserver = data;
+    }
 
-    @Override
+    @Subscribe
     public void GuiScreenEventPost(GuiScreenEvent.ActionPerformedEvent.Post event) {
         if (event.getGui() instanceof GuiDisconnected) {
 
@@ -72,12 +79,13 @@ public class DisconnectedInsert extends Screen {
                 ServerAddress serveraddress = ServerAddress.fromString(lastserver.serverIP);
                 mc.displayGuiScreen(new GuiConnecting(new GuiMainMenu(), mc, lastserver.serverIP, serveraddress.getPort()));
             }
-            ServerAddress serveraddress = ServerAddress.fromString(lastserver.serverIP);
-            event.getGui().drawCenteredString(event.getGui().fontRenderer, lastserver.serverIP + " Port: " + serveraddress.getPort(), event.getGui().width / 2, event.getGui().height / 2 - 50, 11184810);
-            event.getGui().drawCenteredString(event.getGui().fontRenderer, "Ping: " + ping, event.getGui().width / 2, event.getGui().height / 2 - 65, 11184810);
-            if (doPing) {
-                doPing = false;
-                try {
+            try {
+                ServerAddress serveraddress = ServerAddress.fromString(lastserver.serverIP);
+                event.getGui().drawCenteredString(event.getGui().fontRenderer, lastserver.serverIP + " Port: " + serveraddress.getPort(), event.getGui().width / 2, event.getGui().height / 2 - 50, 11184810);
+                event.getGui().drawCenteredString(event.getGui().fontRenderer, "Ping: " + ping, event.getGui().width / 2, event.getGui().height / 2 - 65, 11184810);
+                if (doPing) {
+                    doPing = false;
+
                     String hostAddress = lastserver.serverIP;
                     int port = serveraddress.getPort();
                     long timeToRespond = 0;
@@ -95,8 +103,8 @@ public class DisconnectedInsert extends Screen {
                     }
 
                     ping = (int) timeToRespond;
-                } catch (IOException ignored) {
                 }
+            } catch (Exception ignored) {
             }
 
 
@@ -104,7 +112,7 @@ public class DisconnectedInsert extends Screen {
     }
 
 
-    @Override
+    @Subscribe
     public void GuiScreenEventInit(GuiScreenEvent.InitGuiEvent.Post event) {
         if (event.getGui() instanceof GuiConnecting) {
             lastserver = mc.getCurrentServerData();

@@ -4,6 +4,7 @@ package Method.Client.module.misc;
 import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.init.Items;
@@ -69,7 +70,7 @@ public class NbtView extends Module {
         setmgr.add(compress = new Setting("compress", this, true));
     }
 
-    @Override
+    @Subscribe
     public void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
         if ((event.getWorld().isRemote || !event.getWorld().isRemote)) {
             ItemStack stack = event.getEntityPlayer().getHeldItem(event.getHand());
@@ -87,7 +88,7 @@ public class NbtView extends Module {
 
     }
 
-    @Override
+    @Subscribe
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (GuiScreen.isAltKeyDown()) {
             readytocopy = true;
@@ -101,7 +102,7 @@ public class NbtView extends Module {
         }
     }
 
-    @Override
+    @Subscribe
     public void ItemTooltipEvent(ItemTooltipEvent event) {
         NBTTagCompound tag = event.getItemStack().getTagCompound();
         ArrayList<String> ttip = new ArrayList<>((int) maxLinesShown.getValDouble());
@@ -206,23 +207,23 @@ public class NbtView extends Module {
             this.setAutoRequestFocus(false);
             this.addWindowListener(new WindowListener() {
 
-                @Override
+                @Subscribe
                 public void windowOpened(WindowEvent e) {
                 }
 
-                @Override
+                @Subscribe
                 public void windowIconified(WindowEvent e) {
                 }
 
-                @Override
+                @Subscribe
                 public void windowDeiconified(WindowEvent e) {
                 }
 
-                @Override
+                @Subscribe
                 public void windowDeactivated(WindowEvent e) {
                 }
 
-                @Override
+                @Subscribe
                 public void windowClosing(WindowEvent e) {
                     InfoWindow.this.setVisible(false);
                     InfoWindow.this.dispose();
@@ -230,11 +231,11 @@ public class NbtView extends Module {
                     else server = null;
                 }
 
-                @Override
+                @Subscribe
                 public void windowClosed(WindowEvent e) {
                 }
 
-                @Override
+                @Subscribe
                 public void windowActivated(WindowEvent e) {
                 }
             });

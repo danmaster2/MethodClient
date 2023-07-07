@@ -4,6 +4,7 @@ package Method.Client.module.misc;
 import Method.Client.Main;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -46,7 +47,7 @@ public class GuiPeek extends Module {
     private static final ResourceLocation RES_MAP_BACKGROUND = new ResourceLocation("textures/map/map_background.png");
 
 
-    @Override
+    @Subscribe
     public void ItemTooltipEvent(ItemTooltipEvent event) {
         if (this.box) {
             event.getToolTip().clear();
@@ -59,7 +60,7 @@ public class GuiPeek extends Module {
     }
 
 
-    @Override
+    @Subscribe
     public void postDrawScreen(GuiScreenEvent.DrawScreenEvent.Post event) {
 
         if (event.getGui() instanceof GuiContainer && ((GuiContainer) event.getGui()).getSlotUnderMouse() != null) {
@@ -145,7 +146,7 @@ public class GuiPeek extends Module {
     }
 
 
-    @Override
+    @Subscribe
     public void onClientTick(TickEvent.ClientTickEvent event) {
         ItemStack itemStack = mc.player.getHeldItemMainhand();
         if (itemStack.getItem() instanceof ItemShulkerBox && Mouse.getEventButton() == 1) {

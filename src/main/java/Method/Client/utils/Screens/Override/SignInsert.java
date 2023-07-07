@@ -1,6 +1,7 @@
 package Method.Client.utils.Screens.Override;
 
 import Method.Client.utils.Screens.Screen;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -27,7 +28,8 @@ import java.util.stream.IntStream;
 
 public class SignInsert extends Screen {
 
-    @Override
+
+    @Subscribe
     public void GuiOpen(GuiOpenEvent event) {
         if (event.getGui() instanceof GuiEditSign) {
             event.setGui(new BetterSignGui(((GuiEditSign) event.getGui()).tileSign));
@@ -167,7 +169,7 @@ public class SignInsert extends Screen {
                     applytext(rando);
                     break;
                 default:
-                    if (button.id < 27)
+                    if (button.id < 27 && button.id > 10)
                         textFields.get(focusedField).text += "&" + Integer.toHexString(button.id - 11);
                     if (button.id == 27)
                         textFields.get(focusedField).text += "&k";

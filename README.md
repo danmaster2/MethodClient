@@ -1,8 +1,6 @@
 # Method Client
 
 Method is a new Client meant for 1.12.2 Minecraft
-[Discord](https://discord.gg/pJ5qDsSSvg)
-
 
 ## Installation
 

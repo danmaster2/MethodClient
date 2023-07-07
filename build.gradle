@@ -1,7 +1,6 @@
 buildscript {
     repositories {
-        maven { url = 'https://files.minecraftforge.net/maven' }
-        jcenter()
+        maven { url = 'https://maven.minecraftforge.net' }
         mavenCentral()
     }
     dependencies {
@@ -11,56 +10,42 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle'
 
 group = "Method"
-version = "0.2.0"
+version = "1.0.0"
 archivesBaseName = 'MethodClient'
 
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
 
-
 minecraft {
-
     mappings channel: 'stable', version: '39-1.12'
-
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
-
     //  makeObfSourceJar = true // an Srg named sources jar is made by default. uncomment this to disable.
-
-    // Default run configurations.
-    // These can be tweaked, removed, or duplicated as needed.
     runs {
         client {
             workingDirectory project.file('run')
-
             // Recommended logging data for a userdev environment
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-
             // Recommended logging level for the console
             property 'forge.logging.console.level', 'debug'
-
             property 'fml.coreMods.load', 'Method.Client.utils.Patcher.Core.CoreModPatcher'
-
             mods {
                 client {
                     source sourceSets.main
                 }
             }
         }
-
-
     }
 }
 
-sourceSets {
-    main {
-        output.resourcesDir = java.outputDir
-    }
-}
+sourceSets.main.resources { srcDir 'src/main/resources' }
 
-sourceSets.main.resources { srcDir 'src/generated/resources' }
+sourceSets.configureEach {
+    it.output.resourcesDir = it.output.classesDirs.getFiles().iterator().next()
+}
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2855'
+    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
 }
+
 
 processResources {
     exclude '**/Fields'
@@ -71,11 +56,11 @@ jar {
                 "FMLCorePluginContainsFMLMod": true,
                 "FMLCorePlugin"              : "Method.Client.utils.Patcher.Core.CoreModPatcher",
                 "Specification-Title"        : "Client",
-                //"Specification-Vendor": "Client authors",
+                "Specification-Vendor"       : "Method Client Dev",
                 "Specification-Version"      : "1",
                 "Implementation-Title"       : project.name,
                 "Implementation-Version"     : project.version,
-                //"Implementation-Vendor": "Client authors",
+                "Implementation-Vendor"      : "Method Client Dev",
                 "Implementation-Timestamp"   : new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }

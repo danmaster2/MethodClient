@@ -3,8 +3,12 @@ package Method.Client.module.Onscreen.Display;
 import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
+import Method.Client.module.Onscreen.OnscreenGUI;
 import Method.Client.module.Onscreen.PinableFrame;
 import Method.Client.utils.system.Connection;
+import Method.Client.utils.visual.RenderUtils;
+import com.google.common.eventbus.Subscribe;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.network.play.server.SPacketTimeUpdate;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.Text;
@@ -13,7 +17,7 @@ import org.lwjgl.input.Keyboard;
 import java.util.Arrays;
 
 import static Method.Client.Main.setmgr;
-import static net.minecraft.client.gui.Gui.drawRect;
+
 
 public final class Tps extends Module {
     public Tps() {
@@ -28,9 +32,10 @@ public final class Tps extends Module {
     static Setting Shadow;
     static Setting Frame;
     static Setting FontSize;
-    private static final float[] tickRates = new float[20];
+    private static float[] tickRates = new float[20];
     private int nextIndex = 0;
     private long timeLastTimeUpdate;
+    static PinableFrame pin;
 
     @Override
     public void setup() {
@@ -43,21 +48,21 @@ public final class Tps extends Module {
         Arrays.fill(tickRates, 0.0F);
         setmgr.add(Shadow = new Setting("Shadow", this, true));
         setmgr.add(background = new Setting("background", this, false));
-        setmgr.add(xpos = new Setting("xpos", this, 200, -20, (mc.displayWidth ) + 40, true));
+        setmgr.add(xpos = new Setting("xpos", this, 200, -20, (mc.displayWidth) + 40, true));
         setmgr.add(ypos = new Setting("ypos", this, 210, -20, (mc.displayHeight) + 40, true));
         setmgr.add(Frame = new Setting("Font", this, "Times", fontoptions()));
+        pin = new TpsRUN();
+        OnscreenGUI.pinableFrames.add(pin);
     }
 
     @Override
     public void onEnable() {
-        PinableFrame.Toggle("TpsSET", true);
-
+        PinableFrame.Toggle(pin, true);
     }
 
     @Override
     public void onDisable() {
-        PinableFrame.Toggle("TpsSET", false);
-
+        PinableFrame.Toggle(pin, false);
     }
 
     @Override
@@ -72,7 +77,7 @@ public final class Tps extends Module {
         if (this.timeLastTimeUpdate != -1L) {
             float timeElapsed = (float) (System.currentTimeMillis() - this.timeLastTimeUpdate) / 1000.0F;
             tickRates[(this.nextIndex % tickRates.length)] = MathHelper.clamp(20.0F / timeElapsed, 0.0F, 20.0F);
-            this.nextIndex += 1;
+            ++this.nextIndex;
         }
         this.timeLastTimeUpdate = System.currentTimeMillis();
     }
@@ -83,11 +88,12 @@ public final class Tps extends Module {
         for (float tickRate : tickRates) {
             if (tickRate > 0.0F) {
                 sumTickRates += tickRate;
-                numTicks += 1.0F;
+                ++numTicks;
             }
         }
         return MathHelper.clamp(sumTickRates / numTicks, 0.0F, 20.0F);
     }
+
 
     public static class TpsRUN extends PinableFrame {
 
@@ -97,25 +103,25 @@ public final class Tps extends Module {
 
         @Override
         public void setup() {
-            GetSetup(this, xpos, ypos, Frame, FontSize);
+            getSetup(this, xpos, ypos, Frame, FontSize);
         }
 
         @Override
         public void Ongui() {
-            GetInit(this, xpos, ypos, Frame, FontSize);
-
+            getInit(this, xpos, ypos, Frame, FontSize);
         }
 
-        @Override
+        @Subscribe
         public void onRenderGameOverlay(Text event) {
-
             final String tickrate = String.format("TPS: %.2f", getTickRate());
 
-            fontSelect(Frame, tickrate, this.getX(), this.getY() + 10, TextColor.getcolor(), Shadow.getValBoolean());
-            if (background.getValBoolean())
-                drawRect(this.x, this.y + 10, this.x + widthcal(Frame, tickrate), this.y + 20, BgColor.getcolor());
-            super.onRenderGameOverlay(event);
+            int posx = (int) (this.getX() * RenderUtils.simpleScale(false));
+            int posy = (int) (this.getY() * RenderUtils.simpleScale(true));
 
+            fontSelect(Frame, tickrate, posx, posy + 10, TextColor.getcolor(), Shadow.getValBoolean());
+
+            if (background.getValBoolean())
+                Gui.drawRect(posx, posy + 10, posx + widthcal(Frame, tickrate), posy + 20, BgColor.getcolor());
         }
 
 

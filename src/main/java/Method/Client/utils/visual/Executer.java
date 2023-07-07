@@ -8,6 +8,7 @@ public class Executer {
 
     public static void init() {
         executor = Executors.newSingleThreadExecutor();
+
     }
 
     public static void execute(Runnable task) {

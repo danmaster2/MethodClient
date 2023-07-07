@@ -7,6 +7,7 @@ import Method.Client.module.Module;
 import Method.Client.utils.visual.ChatUtils;
 import Method.Client.utils.visual.ColorUtils;
 import Method.Client.utils.visual.RenderUtils;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
@@ -36,19 +37,17 @@ public class Trajectories extends Module {
         super("Trajectories", Keyboard.KEY_NONE, Category.RENDER, "Trajectories");
     }
 
-
     public final List<Bpos> Pos = new ArrayList<>();
 
     Setting FindEpearl = setmgr.add(new Setting("Follow Pearl", this, true));
-    Setting ChatPrint = setmgr.add(new Setting("ChatPrint", this, false, FindEpearl, 3));
-    Setting RenderTime = setmgr.add(new Setting("RenderTime", this, 5, 0, 35, false, FindEpearl, 4));
+    Setting ChatPrint = setmgr.add(new Setting("ChatPrint", this, false, FindEpearl));
+    Setting RenderTime = setmgr.add(new Setting("RenderTime", this, 5, 0, 35, false, FindEpearl));
     Setting Mode = setmgr.add(new Setting("Mode", this, "Xspot", BlockEspOptions()));
     Setting LineWidth = setmgr.add(new Setting("LineWidth", this, 1, 0, 3, false));
     Setting Color = setmgr.add(new Setting("Color", this, .22, 1, .6, .65));
     Setting skeleton = setmgr.add(new Setting("Skeleton", this, false));
 
-
-    @Override
+    @Subscribe
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (FindEpearl.getValBoolean()) {
             for (Entity entity : mc.world.loadedEntityList) {
@@ -86,7 +85,7 @@ public class Trajectories extends Module {
                 || item instanceof ItemFishingRod;
     }
 
-    @Override
+    @Subscribe
     public void onRenderWorldLast(RenderWorldLastEvent event) {
         for (Entity entity : mc.world.loadedEntityList) {
             if (entity instanceof EntityLivingBase) {
@@ -97,6 +96,7 @@ public class Trajectories extends Module {
                     livingBase.getActiveItemStack();
 
                     // This code is used all over I really have no idea where it came from
+                    // I compacted it as much as possible
                     boolean usingBow = livingBase.getActiveItemStack().getItem() instanceof ItemBow;
                     double arrowPosX = livingBase.lastTickPosX + (livingBase.posX - livingBase.lastTickPosX) * event.getPartialTicks() - MathHelper.cos((float) Math.toRadians(livingBase.rotationYaw)) * 0.16F;
                     double arrowPosY = livingBase.lastTickPosY + (livingBase.posY - livingBase.lastTickPosY) * event.getPartialTicks() + livingBase.getEyeHeight() - 0.1;
@@ -163,9 +163,8 @@ public class Trajectories extends Module {
             GlStateManager.glLineWidth((float) LineWidth.getValDouble() * 3);
             List<Bpos> toremove = new ArrayList<>();
             for (Bpos po : Pos) {
-                if (po.getaLong() + (RenderTime.getValDouble() * 1000) < System.currentTimeMillis()) {
+                if (po.getaLong() + (RenderTime.getValDouble() * 1000) < System.currentTimeMillis())
                     toremove.add(po);
-                }
             }
             Pos.removeAll(toremove);
             if (!Pos.isEmpty())
@@ -184,7 +183,6 @@ public class Trajectories extends Module {
                 }
             RenderUtils.ReleaseGl();
         }
-        super.onRenderWorldLast(event);
     }
 
     private double[] rPos() {
@@ -199,15 +197,8 @@ public class Trajectories extends Module {
     }
 
     static class Bpos {
-
-        public List<Vec3d> getVec3ds() {
-            return vec3ds;
-        }
-
         private final List<Vec3d> vec3ds;
-
         private final UUID uuid;
-
         private final long aLong;
 
         public Bpos(List<Vec3d> vec3ds, UUID uuid, long l) {
@@ -218,6 +209,9 @@ public class Trajectories extends Module {
 
         public UUID getUuid() {
             return uuid;
+        }
+        public List<Vec3d> getVec3ds() {
+            return vec3ds;
         }
 
         public long getaLong() {

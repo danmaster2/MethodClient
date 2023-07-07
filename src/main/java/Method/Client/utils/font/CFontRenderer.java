@@ -23,13 +23,16 @@ public class CFontRenderer extends CFont {
         super(font, antiAlias, fractionalMetrics);
         setupMinecraftColorcodes();
         setupBoldItalicIDs();
+
     }
 
     public float drawStringWithShadow(String text, double x, double y, int color) {
         float shadowWidth = String(text, x + 1D, y + 1D, color, true);
         return Math.max(shadowWidth, String(text, x, y, color, false));
     }
-
+    public float drawStringNoShadow(String text, float x, float y, int color) {
+        return String(text, x , y, color);
+    }
     public float String(String text, float x, float y, int color) {
         return String(text, x, y, color, false);
     }
@@ -67,7 +70,7 @@ public class CFontRenderer extends CFont {
         boolean underline = false;
         x *= 2.0D;
         y *= 2.0D;
-        GL11.glPushMatrix();
+        GlStateManager.pushMatrix();
         GlStateManager.scale(0.5D, 0.5D, 0.5D);
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(770, 771);

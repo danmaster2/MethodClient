@@ -20,7 +20,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.List;
 
-import static Method.Client.utils.proxy.Overrides.ColorMix.getColorForEnchantment;
+import static Method.Client.utils.proxy.Overrides.EntityrenderOverride.getColorForEnchantment;
 
 @SideOnly(Side.CLIENT)
 public class ModRenderItem extends RenderItem {

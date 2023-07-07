@@ -24,6 +24,7 @@ public class CreativeTabEggpot extends CreativeTabs {
         super("Items");
     }
 
+
     @Override
     public void displayAllRelevantItems(NonNullList<ItemStack> itemList) {
 

@@ -6,6 +6,7 @@ import Method.Client.module.Category;
 import Method.Client.module.Module;
 import Method.Client.utils.font.CFont;
 import Method.Client.utils.visual.RenderUtils;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
@@ -30,12 +31,12 @@ public class ToolTipPlus extends Module {
     }
 
     Setting TooltipModify = setmgr.add(new Setting("TooltipModify", this, true));
-    Setting Customfont = setmgr.add(new Setting("Customfont", this, true, TooltipModify, 2));
-    Setting CustomBackground = setmgr.add(new Setting("CustomBackground", this, false, TooltipModify, 3));
-    Setting Color = setmgr.add(new Setting("Color", this, .1, 1, .95, .8, TooltipModify, 4));
-    Setting Outline = setmgr.add(new Setting("Outline", this, false, TooltipModify, 5));
-    Setting OutlineColor = setmgr.add(new Setting("OutlineColor", this, .55, 1, 1, 1, TooltipModify, 6));
-    Setting ItemSize = setmgr.add(ItemSize = new Setting("ItemSize", this, true));
+    Setting Customfont = setmgr.add(new Setting("Customfont", this, true, TooltipModify));
+    Setting CustomBackground = setmgr.add(new Setting("CustomBackground", this, false, TooltipModify));
+    Setting Color = setmgr.add(new Setting("Color", this, .1, 1, .95, .8, TooltipModify));
+    Setting Outline = setmgr.add(new Setting("Outline", this, false, TooltipModify));
+    Setting OutlineColor = setmgr.add(new Setting("OutlineColor", this, .55, 1, 1, 1, TooltipModify));
+    Setting ItemSize = setmgr.add(new Setting("ItemSize", this, true));
 
     public String bytesToString(int count) {
         if (count >= 1024)
@@ -43,7 +44,7 @@ public class ToolTipPlus extends Module {
         return String.format("%d bytes", count);
     }
 
-    @Override
+    @Subscribe
     public void ItemTooltipEvent(ItemTooltipEvent event) {
         if (!ItemSize.getValBoolean())
             return;
@@ -57,7 +58,7 @@ public class ToolTipPlus extends Module {
 
     }
 
-    @Override
+    @Subscribe
     public void RendertooltipPre(RenderTooltipEvent.Pre event) {
         if (!TooltipModify.getValBoolean())
             return;

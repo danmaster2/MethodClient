@@ -1,6 +1,7 @@
 package Method.Client.utils.system;
 
 import Method.Client.utils.visual.ChatUtils;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagDouble;
 import net.minecraft.nbt.NBTTagList;
@@ -14,30 +15,34 @@ import net.minecraft.world.chunk.storage.AnvilSaveHandler;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
 import net.minecraftforge.event.world.ChunkEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
 public class WorldDownloader {
-    public static AnvilChunkLoader newdownload;
-    public static boolean Saving = false;
-    public static File SaveDir;
-    public static String Savename;
+    public AnvilChunkLoader newdownload;
+    public boolean Saving = false;
+    public File SaveDir;
+    public String Savename;
 
-    public static ArrayList<Chunk> chunks = new ArrayList<>();
+    public  ArrayList<Chunk> chunks = new ArrayList<>();
 
-    public static void ChunkeventLOAD(ChunkEvent.Load event) {
+    @Subscribe
+    public void ChunkeventLOAD(ChunkEvent.Load event) {
         if (Saving) {
             chunks.add(event.getChunk());
         }
     }
 
-    public static ISaveHandler getSaveLoader(String saveName, boolean storePlayerdata, File file) {
+
+    public ISaveHandler getSaveLoader(String saveName, boolean storePlayerdata, File file) {
         return new AnvilSaveHandler(file, saveName, storePlayerdata, new DataFixer(Wrapper.mc.getDataFixer().version));
     }
 
-    public static void Clienttick() {
+    @Subscribe
+    public void onClientTick(TickEvent.ClientTickEvent event) {
         if (Saving) {
             ArrayList<Chunk> remove = new ArrayList<>();
             for (Chunk option : chunks) {
@@ -55,7 +60,7 @@ public class WorldDownloader {
         }
     }
 
-    public static void start() {
+    public void start() {
         ChatUtils.message("Starting world download");
         Savename = "Download Time" + (int) System.currentTimeMillis() / 1000;
         SaveDir = new File(new File(Wrapper.INSTANCE.mc().gameDir, "saves").getAbsolutePath(), Savename);
@@ -73,7 +78,7 @@ public class WorldDownloader {
         ChatUtils.message(".minecraft/saves/" + Savename);
     }
 
-    protected static NBTTagList newDoubleNBTList(double... numbers) {
+    protected NBTTagList newDoubleNBTList(double... numbers) {
         NBTTagList nbttaglist = new NBTTagList();
 
         for (double d0 : numbers) {
@@ -83,7 +88,7 @@ public class WorldDownloader {
         return nbttaglist;
     }
 
-    public static void stop() {
+    public void stop() {
         ChatUtils.message("Stopped world download");
         newdownload.flush();
         Saving = false;

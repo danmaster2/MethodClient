@@ -16,23 +16,15 @@ import static org.lwjgl.opengl.GL11.glEnable;
 public class ColorPicker extends Component {
 
     private final Setting set;
-    private final Button parent;
-    private int offset;
-    private int x;
-    private int y;
     private boolean dragging = false;
     private String localname;
     private int indexer; // 0 color 1 saturation 2 brightness 3 Alpha
-    private boolean hovered;
     public double renderWidth = 0;
 
     public ColorPicker(Setting value, Button button, int offset) {
-
         this.indexer = 0;
         this.set = value;
         this.parent = button;
-        this.x = button.parent.getX() + button.parent.getWidth();
-        this.y = button.parent.getY() + button.offset;
         this.offset = offset;
         this.localname = set.getName();
     }
@@ -50,21 +42,13 @@ public class ColorPicker extends Component {
     }
 
     @Override
-    public void setOff(int newOff) {
-        offset = newOff;
-    }
-
-    @Override
     public String getName() {
         return this.set.getName();
     }
 
     @Override
     public void updateComponent(int mouseX, int mouseY) {
-        this.y = this.parent.parent.getY() + this.offset;
-        this.x = this.parent.parent.getX();
-        this.hovered = isMouseOnButton(mouseX, mouseY);
-        double diff = Math.min(this.parent.parent.getWidth(), Math.max(0, mouseX - this.x));
+        double diff = Math.min(this.parent.parent.getWidth(), Math.max(0, mouseX - this.parent.parent.getX()));
         double min = set.getMin();
         double max = set.getMax();
         switch (this.indexer) {
@@ -103,12 +87,14 @@ public class ColorPicker extends Component {
                     break;
             }
         }
+        super.updateComponent(mouseX, mouseY);
     }
 
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int button) {
         if (this.hovered && button == 0 && this.parent.open) {
+            this.parent.mod.settingChanged(ClickType.Color);
             this.dragging = true;
         }
         if ((this.hovered && button == 1 && this.parent.open)) {
@@ -119,10 +105,6 @@ public class ColorPicker extends Component {
     @Override
     public void mouseReleased(int mouseX, int mouseY, int mouseButton) {
         this.dragging = false;
-    }
-
-    public boolean isMouseOnButton(int x, int y) {
-        return x > this.x && x < this.x + this.parent.parent.getWidth() && y > this.y && y < this.y + this.parent.parent.getBarHeight();
     }
 
     private static double roundToPlace(double value) {

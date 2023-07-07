@@ -3,8 +3,11 @@ package Method.Client.module.Onscreen.Display;
 import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
+import Method.Client.module.Onscreen.OnscreenGUI;
 import Method.Client.module.Onscreen.PinableFrame;
 import Method.Client.utils.visual.RenderUtils;
+import com.google.common.eventbus.Subscribe;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.Text;
@@ -23,6 +26,7 @@ public final class Inventory extends Module {
     static Setting Xcarry;
     static Setting xpos;
     static Setting ypos;
+    static PinableFrame pin;
 
     @Override
     public void setup() {
@@ -33,18 +37,18 @@ public final class Inventory extends Module {
         setmgr.add(Xcarry = new Setting("Xcarry", this, false));
         setmgr.add(xpos = new Setting("xpos", this, 200, -20, mc.displayWidth + 40, true));
         setmgr.add(ypos = new Setting("ypos", this, 110, -20, (mc.displayHeight) + 40, true));
+        pin = new InventoryRUN();
+        OnscreenGUI.pinableFrames.add(pin);
     }
 
     @Override
     public void onEnable() {
-        PinableFrame.Toggle("InventorySET", true);
-
+        PinableFrame.Toggle(pin, true);
     }
 
     @Override
     public void onDisable() {
-        PinableFrame.Toggle("InventorySET", false);
-
+        PinableFrame.Toggle(pin, false);
     }
 
     public static class InventoryRUN extends PinableFrame {
@@ -70,44 +74,51 @@ public final class Inventory extends Module {
             }
         }
 
-        @Override
+        @Subscribe
         public void onRenderGameOverlay(Text event) {
-
             if (mc.player == null)
                 return;
 
             RenderHelper.enableGUIStandardItemLighting();
 
+            int posx = (int) (this.getX() * RenderUtils.simpleScale(false));
+            int posy = (int) (this.getY() * RenderUtils.simpleScale(true));
+
             if (background.getValBoolean())
-                RenderUtils.drawRectDouble(this.getX(), this.getY(), this.getX() + this.getWidth() + 60, this.getY() + 50 + (Hotbar.getValBoolean() ? 25 : 0), BgColor.getcolor()); // background
+                Gui.drawRect(posx, posy, posx + this.getWidth() + 60, posy + 50 + (Hotbar.getValBoolean() ? 25 : 0), BgColor.getcolor()); // background
+
             for (int i = 0; i < 27; i++) {
                 ItemStack itemStack = mc.player.inventory.mainInventory.get(i + 9);
-                int offsetX = this.getX() + (i % 9) * 16;
-                int offsetY = this.getY() + (i / 9) * 16;
+                int offsetX = posx + (i % 9) * 16;
+                int offsetY = posy + (i / 9) * 16;
                 mc.getRenderItem().renderItemAndEffectIntoGUI(itemStack, offsetX, offsetY);
                 mc.getRenderItem().renderItemOverlayIntoGUI(mc.fontRenderer, itemStack, offsetX, offsetY, null);
             }
-            if (Hotbar.getValBoolean())
+
+            if (Hotbar.getValBoolean()) {
                 for (int i = 0; i < 9; i++) {
                     ItemStack itemStack = mc.player.inventory.mainInventory.get(i);
-                    int offsetX = this.getX() + (i % 9) * 16;
-                    int offsetY = this.getY() + 48;
+                    int offsetX = posx + (i % 9) * 16;
+                    int offsetY = posy + 48;
                     mc.getRenderItem().renderItemAndEffectIntoGUI(itemStack, offsetX, offsetY);
                     mc.getRenderItem().renderItemOverlayIntoGUI(mc.fontRenderer, itemStack, offsetX, offsetY, null);
                 }
-            if (Xcarry.getValBoolean())
+            }
+
+            if (Xcarry.getValBoolean()) {
                 for (int i = 0; i < 5; i++) {
                     ItemStack itemStack = mc.player.inventoryContainer.getInventory().get(i);
-                    int offsetX = this.getX() + i * 16;
-                    int offsetY = this.getY() + 60;
+                    int offsetX = posx + i * 16;
+                    int offsetY = posy + 60;
                     mc.getRenderItem().renderItemAndEffectIntoGUI(itemStack, offsetX, offsetY);
                     mc.getRenderItem().renderItemOverlayIntoGUI(mc.fontRenderer, itemStack, offsetX, offsetY, null);
                 }
+            }
+
             RenderHelper.disableStandardItemLighting();
             mc.getRenderItem().zLevel = 0.0F;
-            super.onRenderGameOverlay(event);
-
         }
+
     }
 
 }

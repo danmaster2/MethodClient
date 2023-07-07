@@ -4,15 +4,15 @@ import Method.Client.Main;
 import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
-import Method.Client.utils.Screens.Custom.Search.SearchGuiSettings;
+import Method.Client.utils.Screens.SubGui;
 import Method.Client.utils.system.Connection;
 import Method.Client.utils.visual.Executer;
+import com.google.common.eventbus.Subscribe;
 import it.unimi.dsi.fastutil.longs.Long2ObjectArrayMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongList;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
 import net.minecraft.network.play.server.SPacketBlockAction;
 import net.minecraft.network.play.server.SPacketBlockChange;
 import net.minecraft.network.play.server.SPacketMultiBlockChange;
@@ -24,7 +24,6 @@ import net.minecraftforge.event.world.ChunkEvent;
 import org.lwjgl.input.Keyboard;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static Method.Client.Main.setmgr;
@@ -38,15 +37,6 @@ public class Search extends Module {
     Setting LineWidth = setmgr.add(new Setting("LineWidth", this, 1.8, 0, 3, false));
     Setting Gui = setmgr.add(new Setting("Gui", this, Main.Search));
 
-    private final SearchGuiSettings blocks = new SearchGuiSettings(Blocks.ENDER_CHEST, Blocks.CHEST, Blocks.TRAPPED_CHEST, Blocks.CRAFTING_TABLE, Blocks.ANVIL,
-            Blocks.BREWING_STAND, Blocks.HOPPER, Blocks.DROPPER, Blocks.DISPENSER, Blocks.TRAPDOOR, Blocks.ENCHANTING_TABLE, Blocks.WHITE_SHULKER_BOX,
-            Blocks.ORANGE_SHULKER_BOX, Blocks.MAGENTA_SHULKER_BOX, Blocks.LIGHT_BLUE_SHULKER_BOX, Blocks.YELLOW_SHULKER_BOX, Blocks.LIME_SHULKER_BOX,
-            Blocks.PINK_SHULKER_BOX, Blocks.GRAY_SHULKER_BOX, Blocks.SILVER_SHULKER_BOX, Blocks.CYAN_SHULKER_BOX, Blocks.PURPLE_SHULKER_BOX, Blocks.BLUE_SHULKER_BOX,
-            Blocks.BROWN_SHULKER_BOX, Blocks.GREEN_SHULKER_BOX, Blocks.RED_SHULKER_BOX, Blocks.BLACK_SHULKER_BOX);
-
-
-    public static ArrayList<String> blockNames;
-
     public Search() {
         super("Search", Keyboard.KEY_NONE, Category.RENDER, "Search");
     }
@@ -56,7 +46,6 @@ public class Search extends Module {
         Executer.init();
     }
 
-
     private final Long2ObjectArrayMap<MyChunk> chunks = new Long2ObjectArrayMap<>();
 
     private final Pool<MyBlock> blockPool = new Pool<>(MyBlock::new);
@@ -65,10 +54,8 @@ public class Search extends Module {
 
     private final BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
 
-
     @Override
     public void onEnable() {
-        blockNames = new ArrayList<>(SearchGuiSettings.getBlockNames());
         Executer.init();
         searchViewDistance();
     }
@@ -90,7 +77,7 @@ public class Search extends Module {
     }
 
 
-    @Override
+    @Subscribe
     public void ChunkeventLOAD(ChunkEvent.Load event) {
         searchChunk(event.getChunk());
     }
@@ -153,7 +140,7 @@ public class Search extends Module {
     }
 
 
-    @Override
+    @Subscribe
     public void onRenderWorldLast(RenderWorldLastEvent event) {
         synchronized (chunks) {
             toRemove.clear();
@@ -171,9 +158,12 @@ public class Search extends Module {
     }
 
     private boolean isVisible(Block block) {
-        String name = getName(block);
-        int index = Collections.binarySearch(blockNames, name);
-        return index >= 0;
+        for (SubGui.SelectedThing selectedThing : Main.Search.listGui.list) {
+            if (selectedThing.isSelected)
+                if (selectedThing.name.equalsIgnoreCase(getName(block))) return true;
+        }
+
+        return false;
     }
 
     public static String getName(Block block) {
@@ -233,7 +223,6 @@ public class Search extends Module {
     }
 
     private class MyBlock {
-
         private int x, y, z;
 
         public void set(BlockPos blockPos) {

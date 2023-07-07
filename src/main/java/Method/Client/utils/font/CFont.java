@@ -12,7 +12,7 @@ import java.awt.image.BufferedImage;
  */
 public class CFont {
 
-    private final float imgSize = 512;
+    private final static float imgSize = 512;
     protected CharData[] charData = new CharData[256];
     protected Font font;
     protected boolean antiAlias;
@@ -21,9 +21,11 @@ public class CFont {
     protected int charOffset = 0;
     protected DynamicTexture tex;
 
+
     public static CFontRenderer tfontRenderer18;
     public static CFontRenderer ifontRenderer18;
     public static CFontRenderer afontRenderer18;
+    public static CFontRenderer afontRenderer16;
     public static CFontRenderer tfontRenderer22;
     public static CFontRenderer ifontRenderer22;
     public static CFontRenderer afontRenderer22;
@@ -35,6 +37,7 @@ public class CFont {
         ifontRenderer18 = new CFontRenderer(new Font("Impact", Font.PLAIN, 18), true, false);
         tfontRenderer18 = new CFontRenderer(new Font("Times New Roman", Font.PLAIN, 18), true, false);
         afontRenderer18 = new CFontRenderer(new Font("Arial", Font.PLAIN, 18), true, false);
+        afontRenderer16 = new CFontRenderer(new Font("Arial", Font.PLAIN, 16), true, false);
         ifontRenderer22 = new CFontRenderer(new Font("Impact", Font.PLAIN, 22), true, false);
         tfontRenderer22 = new CFontRenderer(new Font("Times New Roman", Font.PLAIN, 22), true, false);
         afontRenderer22 = new CFontRenderer(new Font("Arial", Font.PLAIN, 22), true, false);

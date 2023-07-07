@@ -1,10 +1,14 @@
 package Method.Client.module.Onscreen.Display;
 
+import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
+import Method.Client.module.Onscreen.OnscreenGUI;
 import Method.Client.module.Onscreen.PinableFrame;
-import Method.Client.managers.Setting;
+import Method.Client.utils.visual.RenderUtils;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.block.Block;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.item.ItemStack;
@@ -12,9 +16,8 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.Text;
 import org.lwjgl.input.Keyboard;
 
-
 import static Method.Client.Main.setmgr;
-import static net.minecraft.client.gui.Gui.drawRect;
+
 
 public final class Blockview extends Module {
     public Blockview() {
@@ -31,6 +34,7 @@ public final class Blockview extends Module {
     static Setting FontSize;
     static Setting Text;
     static Setting Image;
+    static PinableFrame pin;
 
     @Override
     public void setup() {
@@ -43,53 +47,61 @@ public final class Blockview extends Module {
         setmgr.add(Image = new Setting("Image", this, true));
         setmgr.add(Frame = new Setting("Font", this, "Times", fontoptions()));
         setmgr.add(FontSize = new Setting("FontSize", this, 22, 10, 40, true));
-        setmgr.add(xpos = new Setting("xpos", this, 200, -20, (mc.displayWidth ) + 40, true));
+        setmgr.add(xpos = new Setting("xpos", this, 200, -20, (mc.displayWidth) + 40, true));
         setmgr.add(ypos = new Setting("ypos", this, 10, -20, (mc.displayHeight) + 40, true));
+        pin = new BlockviewRUN();
+        OnscreenGUI.pinableFrames.add(pin);
     }
 
     @Override
     public void onEnable() {
-        PinableFrame.Toggle("BlockviewSET", true);
+        PinableFrame.Toggle(pin, true);
     }
 
     @Override
     public void onDisable() {
-        PinableFrame.Toggle("BlockviewSET", false);
+        PinableFrame.Toggle(pin, false);
     }
 
     public static class BlockviewRUN extends PinableFrame {
 
         public BlockviewRUN() {
             super("BlockviewSET", new String[]{}, (int) ypos.getValDouble(), (int) xpos.getValDouble());
+
         }
 
         @Override
         public void setup() {
-            GetSetup(this,xpos,ypos,Frame,FontSize);
+            getSetup(this, xpos, ypos, Frame, FontSize);
         }
 
         @Override
         public void Ongui() {
-            GetInit(this, xpos, ypos, Frame,FontSize);
+            getInit(this, xpos, ypos, Frame, FontSize);
 
         }
 
-        @Override
+        @Subscribe
         public void onRenderGameOverlay(Text event) {
-
             if (mc.objectMouseOver.typeOfHit == RayTraceResult.Type.BLOCK) {
                 Block block = mc.world.getBlockState(mc.objectMouseOver.getBlockPos()).getBlock();
 
                 if (Block.getIdFromBlock(block) == 0)
                     return;
                 if (Text.getValBoolean()) {
+                    int posx = (int) (this.x * RenderUtils.simpleScale(false));
+                    int posy = (int) (this.y * RenderUtils.simpleScale(true));
+
                     if (Background.getValBoolean())
-                        drawRect(this.x, this.y + 10, this.x + widthcal(Frame, block.getLocalizedName()), this.y + 22, Color.getcolor());
-                    fontSelect(Frame, block.getLocalizedName(), this.getX(), this.getY() + 10, TextColor.getcolor(), Shadow.getValBoolean());
+                        Gui.drawRect(posx, posy + 10, posx + widthcal(Frame, block.getLocalizedName()), posy + 22, Color.getcolor());
+
+                    
+                    fontSelect(Frame, block.getLocalizedName(), posx, posy + 10, TextColor.getcolor(), Shadow.getValBoolean());
+                    
                 }
                 if (Image.getValBoolean()) {
                     GlStateManager.pushMatrix();
-                    GlStateManager.translate(this.x+8, this.y-1, 0);
+                    GlStateManager.translate(this.x + 8, this.y - 1, 0);
                     GlStateManager.scale(0.75, 0.75, 0.75);
 
                     RenderHelper.enableGUIStandardItemLighting();
@@ -99,8 +111,6 @@ public final class Blockview extends Module {
                     GlStateManager.popMatrix();
                 }
             }
-            super.onRenderGameOverlay(event);
-
         }
 
 

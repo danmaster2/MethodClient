@@ -7,10 +7,9 @@ import Method.Client.module.Module;
 import Method.Client.utils.Utils;
 import Method.Client.utils.ValidUtils;
 import Method.Client.utils.visual.ChatUtils;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityArmorStand;
-import net.minecraft.entity.monster.IMob;
-import net.minecraft.entity.passive.IAnimals;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemBow;
 import net.minecraft.item.ItemStack;
@@ -27,11 +26,11 @@ import static Method.Client.Main.setmgr;
 public class BowMod extends Module {
 
     public Setting BowSpam = setmgr.add(new Setting("BowSpam", this, false));
-    public Setting PacketSpam = setmgr.add(new Setting("PacketSpam", this, false, BowSpam, 2));
+    public Setting PacketSpam = setmgr.add(new Setting("PacketSpam", this, false, BowSpam));
     public Setting AimBot = setmgr.add(new Setting("AimBot", this, false));
-    public Setting walls = setmgr.add(new Setting("walls", this, false, AimBot, 6));
-    public Setting yaw = setmgr.add(new Setting("Yaw", this, 22, 0, 50, false, AimBot, 4));
-    public Setting FOV = setmgr.add(new Setting("FOV", this, 90, 1, 180, true, AimBot, 5));
+    public Setting walls = setmgr.add(new Setting("walls", this, false, AimBot));
+    public Setting yaw = setmgr.add(new Setting("Yaw", this, 22, 0, 50, false, AimBot));
+    public Setting FOV = setmgr.add(new Setting("FOV", this, 90, 1, 180, true, AimBot));
     public Setting KickBow = setmgr.add(new Setting("KickBow", this, false));
 
     public EntityLivingBase target;
@@ -48,7 +47,7 @@ public class BowMod extends Module {
         super.onDisable();
     }
 
-    @Override
+    @Subscribe
     public void onClientTick(TickEvent.ClientTickEvent event) {
         mc.player.inventory.getCurrentItem();
         if (!(mc.player.inventory.getCurrentItem().getItem() instanceof ItemBow)) {
@@ -81,7 +80,6 @@ public class BowMod extends Module {
 
             rangeAimVelocity = rangeCharge / 20;
             rangeAimVelocity = (rangeAimVelocity * rangeAimVelocity + rangeAimVelocity * 2) / 3;
-            rangeAimVelocity = 1;
 
             double posX = this.target.posX - mc.player.posX;
             double posY = this.target.posY + this.target.getEyeHeight() - 0.15 - mc.player.posY - mc.player.getEyeHeight();
@@ -129,9 +127,6 @@ public class BowMod extends Module {
 
     public boolean check(EntityLivingBase entity) {
         if (Checks(entity, FOV)) return false;
-        if (!ValidUtils.pingCheck(entity)) {
-            return false;
-        }
         if (!this.walls.getValBoolean()) {
             return mc.player.canEntityBeSeen(entity);
         }
@@ -139,9 +134,6 @@ public class BowMod extends Module {
     }
     boolean Checks(EntityLivingBase entity, Setting fov) {
         if (entity instanceof EntityArmorStand) {
-            return true;
-        }
-        if (!ValidUtils.isNoScreen()) {
             return true;
         }
         if (entity == mc.player) {
@@ -163,6 +155,7 @@ public class BowMod extends Module {
             return false;
         return true;
     }
+
     EntityLivingBase getClosestEntity() {
         EntityLivingBase closestEntity = null;
         for (Object o : mc.world.loadedEntityList) {

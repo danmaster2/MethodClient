@@ -4,8 +4,10 @@ import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
 import Method.Client.utils.Utils;
+import Method.Client.utils.ValidUtils;
 import Method.Client.utils.system.Connection;
 import Method.Client.utils.system.Wrapper;
+import com.google.common.eventbus.Subscribe;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.network.NetworkPlayerInfo;
@@ -25,7 +27,6 @@ import static Method.Client.Main.setmgr;
 
 public class AntiBot extends Module {
 
-    public static ArrayList<EntityBot> bots = new ArrayList<>();
 
     public Setting level = setmgr.add(new Setting("level", this, 0, 0, 6, false));
     public Setting tick = setmgr.add(new Setting("tick", this, 0, 0, 999, true));
@@ -38,7 +39,9 @@ public class AntiBot extends Module {
     public Setting ifTabName = setmgr.add(new Setting("OutTabName", this, false));
     public Setting ifPing = setmgr.add(new Setting("PingCheck", this, false));
     public Setting remove = setmgr.add(new Setting("RemoveBots", this, false));
+    public Setting Friend = setmgr.add(new Setting("Friend", this, true));
     public Setting gwen = setmgr.add(new Setting("Gwen", this, false));
+    public Setting canEntityBeSeen = setmgr.add(new Setting("canEntityBeSeen", this, false));
 
     public AntiBot() {
         super("AntiBot", Keyboard.KEY_NONE, Category.COMBAT, "Does not hit bots");
@@ -50,77 +53,56 @@ public class AntiBot extends Module {
         super.onEnable();
     }
 
-
     @Override
     public boolean onPacket(Object packet, Connection.Side side) {
-        if (gwen.getValBoolean()) {
-            for (Object entity : mc.world.loadedEntityList) {
-                if (packet instanceof SPacketSpawnPlayer) {
-                    SPacketSpawnPlayer spawn = (SPacketSpawnPlayer) packet;
-                    double posX = spawn.getX() / 32.0D;
-                    double posY = spawn.getY() / 32.0D;
-                    double posZ = spawn.getZ() / 32.0D;
+        if (gwen.getValBoolean() && packet instanceof SPacketSpawnPlayer) {
+            SPacketSpawnPlayer spawn = (SPacketSpawnPlayer) packet;
+            double posX = spawn.getX() / 32.0D;
+            double posY = spawn.getY() / 32.0D;
+            double posZ = spawn.getZ() / 32.0D;
 
-                    double difX = mc.player.posX - posX;
-                    double difY = mc.player.posY - posY;
-                    double difZ = mc.player.posZ - posZ;
-
-                    double dist = Math.sqrt(difX * difX + difY * difY + difZ * difZ);
-                    if ((dist <= 17.0D) && (posX != mc.player.posX) && (posY != mc.player.posY) && (posZ != mc.player.posZ)) {
-                        return false;
-                    }
-                }
-            }
+            double dist = Math.sqrt(Math.pow(mc.player.posX - posX, 2) + Math.pow(mc.player.posY - posY, 2) + Math.pow(mc.player.posZ - posZ, 2));
+            return dist > 17.0 || posX == mc.player.posX || posY == mc.player.posY || posZ == mc.player.posZ;
         }
         return true;
     }
 
-    @Override
+    public static ArrayList<EntityBot> bots = new ArrayList<>();
+
+    @Subscribe
     public void onClientTick(ClientTickEvent event) {
-        if (tick.getValDouble() > 0.0) {
-            bots.clear();
-        }
         for (Object object : mc.world.loadedEntityList) {
-            if (object instanceof EntityLivingBase) {
-                EntityLivingBase entity = (EntityLivingBase) object;
-                if (!(entity instanceof EntityPlayerSP) && entity instanceof EntityPlayer) {
-                    EntityPlayer bot = (EntityPlayer) entity;
-                    if (!isBotBase(bot)) {
-                        int ailevel = (int) level.getValDouble();
-                        boolean isAi = ailevel > 0.0;
-                        if (isAi && botPercentage(bot) > ailevel) {
-                            addBot(bot);
-                        } else if (!isAi && botCondition(bot)) {
-                            addBot(bot);
-                        }
-                    } else {
-                        addBot(bot);
-                        if (remove.getValBoolean()) {
-                            mc.world.removeEntity(bot);
-                        }
-                    }
+            if (object instanceof EntityLivingBase && !(object instanceof EntityPlayerSP)) {
+                if (!isBotBase((EntityLivingBase) object)) {
+                    if (level.getValDouble() > 0.0 && botPercentage((EntityLivingBase) object) > level.getValDouble())
+                        addBot((EntityLivingBase) object);
+                    else if (level.getValDouble() < 1 && botPercentage((EntityLivingBase) object) >= 1)
+                        addBot((EntityLivingBase) object);
+                } else {
+                    addBot((EntityLivingBase) object);
+                    if (remove.getValBoolean())
+                        mc.world.removeEntity((EntityLivingBase) object);
                 }
             }
         }
-        super.onClientTick(event);
     }
 
-    void addBot(EntityPlayer player) {
-        if (!isBot(player)) {
-            bots.add(new EntityBot(player));
+    void addBot(EntityLivingBase entity) {
+        if (Friend.getValBoolean() && ValidUtils.isFriendEnemy(entity))
+            return;
+        if (!isBot(entity)) {
+            bots.add(new EntityBot(entity));
         }
     }
 
-    public static boolean isBot(EntityPlayer player) {
+    public static boolean isBot(EntityLivingBase livingBase) {
         for (EntityBot bot : bots) {
-            if (bot.getName().equals((player.getName()))) {
-                if (player.isInvisible() != bot.isInvisible()) {
-                    return player.isInvisible();
-                }
+            if (bot.getName().equals((livingBase.getName()))) {
+                if (livingBase.isInvisible() != bot.isInvisible())
+                    return livingBase.isInvisible();
                 return true;
             } else {
-                if (bot.getId() == player.getEntityId()
-                        || bot.getUuid().equals(player.getGameProfile().getId())) {
+                if (bot.getId() == livingBase.getEntityId() || bot.getUuid().equals(livingBase.getUniqueID())) {
                     return true;
                 }
             }
@@ -128,48 +110,16 @@ public class AntiBot extends Module {
         return false;
     }
 
-    boolean botCondition(EntityPlayer bot) {
-        if (tick.getValDouble() > 0.0 && bot.ticksExisted < tick.getValDouble()) {
-            return true;
-        }
-        if (ifInAir.getValBoolean()
-                && bot.isInvisible()
-                && bot.motionY == 0.0
-                && bot.posY > mc.player.posY + 1.0
-                && Utils.isBlockMaterial(new BlockPos(bot).down(), Blocks.AIR)) {
-            return true;
-        }
-        if (ifGround.getValBoolean()
-                && bot.motionY == 0.0
-                && !bot.collidedVertically
-                && bot.onGround
-                && bot.posY % 1.0 != 0.0
-                && bot.posY % 0.5 != 0.0) {
-            return true;
-        }
-        if (ifZeroHealth.getValBoolean() && bot.getHealth() <= 0) {
-            return true;
-        }
-        if (ifInvisible.getValBoolean() && bot.isInvisible()) {
-            return true;
-        }
-        if (ifEntityId.getValBoolean() && bot.getEntityId() >= 1000000000) {
-            return true;
-        }
-        if (ifTabName.getValBoolean()) {
-            boolean isTabName = false;
-            for (NetworkPlayerInfo npi : Objects.requireNonNull(Wrapper.INSTANCE.mc().getConnection()).getPlayerInfoMap()) {
-                npi.getGameProfile();
-                if (npi.getGameProfile().getName().contains(bot.getName())) {
-                    isTabName = true;
-                }
+    boolean isBotTabName(EntityLivingBase bot) {
+        for (NetworkPlayerInfo npi : Objects.requireNonNull(Wrapper.INSTANCE.mc().getConnection()).getPlayerInfoMap()) {
+            if (npi.getGameProfile().getName().contains(bot.getName())) {
+                return false;
             }
-            return !isTabName;
         }
-        return false;
+        return true;
     }
 
-    int botPercentage(EntityPlayer bot) {
+    int botPercentage(EntityLivingBase bot) {
         int percentage = 0;
         if (tick.getValDouble() > 0.0 && bot.ticksExisted < tick.getValDouble()) {
             percentage++;
@@ -188,57 +138,60 @@ public class AntiBot extends Module {
                 && bot.posY % 0.5 != 0.0) {
             percentage++;
         }
-        if (ifZeroHealth.getValBoolean() && bot.getHealth() <= 0) {
+        if (ifZeroHealth.getValBoolean() && (bot.getHealth() <= 0 || bot.isDead)) {
             percentage++;
         }
         if (ifInvisible.getValBoolean() && bot.isInvisible()) {
             percentage++;
         }
+
+        if (canEntityBeSeen.getValBoolean() && !mc.player.canEntityBeSeen(bot)) {
+            percentage++;
+        }
+
+        if (ifPing.getValBoolean()) {
+            Objects.requireNonNull(Wrapper.INSTANCE.mc().getConnection()).getPlayerInfo(bot.getUniqueID());
+            if (Objects.requireNonNull(Wrapper.INSTANCE.mc().getConnection()).getPlayerInfo(bot.getUniqueID()).getResponseTime() <= 5)
+                percentage++;
+        }
+
         if (ifEntityId.getValBoolean() && bot.getEntityId() >= 1000000000) {
             percentage++;
         }
-        if (ifTabName.getValBoolean()) {
-            boolean isTabName = false;
-            for (NetworkPlayerInfo npi : Objects.requireNonNull(Wrapper.INSTANCE.mc().getConnection()).getPlayerInfoMap()) {
-                npi.getGameProfile();
-                if (npi.getGameProfile().getName().contains(bot.getName())) {
-                    isTabName = true;
-                }
-            }
-            if (!isTabName) {
-                percentage++;
-            }
+        if (ifTabName.getValBoolean() && isBotTabName(bot)) {
+            percentage++;
         }
         return percentage;
     }
 
-    boolean isBotBase(EntityPlayer bot) {
-        if (isBot(bot)) {
+    boolean isBotBase(EntityLivingBase entity) {
+        if (isBot(entity))
             return true;
+        if (entity instanceof EntityPlayer) {
+            ((EntityPlayer) entity).getGameProfile();
+            GameProfile botProfile = ((EntityPlayer) entity).getGameProfile();
+            entity.getUniqueID();
+            if (botProfile.getName() == null) {
+                return true;
+            }
+            String botName = botProfile.getName();
+            return botName.contains("Body #") || botName.contains("NPC")
+                    || botName.equalsIgnoreCase(Utils.getEntityNameColor(entity));
         }
-        bot.getGameProfile();
-        GameProfile botProfile = bot.getGameProfile();
-        bot.getUniqueID();
-        if (botProfile.getName() == null) {
-            return true;
-        }
-        String botName = botProfile.getName();
-        return botName.contains("Body #") || botName.contains("NPC")
-                || botName.equalsIgnoreCase(Utils.getEntityNameColor(bot));
+        return false;
     }
 
     public static class EntityBot {
-
         private final String name;
         private final int id;
         private final UUID uuid;
         private final boolean invisible;
 
-        public EntityBot(EntityPlayer player) {
-            this.name = String.valueOf(player.getGameProfile().getName());
-            this.id = player.getEntityId();
-            this.uuid = player.getGameProfile().getId();
-            this.invisible = player.isInvisible();
+        public EntityBot(EntityLivingBase entity) {
+            this.name = entity.getName();
+            this.id = entity.getEntityId();
+            this.uuid = entity.getUniqueID();
+            this.invisible = entity.isInvisible();
         }
 
         public int getId() {
@@ -256,6 +209,5 @@ public class AntiBot extends Module {
         public boolean isInvisible() {
             return invisible;
         }
-
     }
 }

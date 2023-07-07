@@ -3,21 +3,29 @@ package Method.Client.utils.visual;
 import net.minecraft.client.renderer.GlStateManager;
 
 import java.awt.*;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class ColorUtils {
 
     public static Color rainbow() {
         long offset = 999999999999L;
         float hue = (float) (System.nanoTime() + offset) / 1.0E10f % 1.0f;
-        long color = Long.parseLong(Integer.toHexString(Color.HSBtoRGB(hue, 1.0f, 1.0f)), 16);
-        return new Color((int) color);
+        return new Color((int) Long.parseLong(Integer.toHexString(Color.HSBtoRGB(hue, 1.0f, 1.0f)), 16));
     }
 
     public static Color wave(double wave, double satur, double bright) {
         float hue = (float) (System.nanoTime()) / 1.0E10f % 1.0f;
         hue = (float) (hue + (wave / 10));
-        int color = Color.HSBtoRGB(hue, (float) satur,(float) bright);
+        int color = Color.HSBtoRGB(hue, (float) satur, (float) bright);
         return new Color(color);
+    }
+
+    public static Color randomColor(boolean nice) {
+        if (nice)
+            return Color.getHSBColor(new Random().nextFloat(), (float) ThreadLocalRandom.current().nextDouble(0.6,  0.8), 0.9f);
+        else
+            return new Color((int) (Math.random() * 0x1000000));
     }
 
     public static void glColor(int color) {
@@ -26,14 +34,6 @@ public class ColorUtils {
 
     public static int rgbToInt(int r, int g, int b, int a) {
         return (r << 16) | (g << 8) | (b) | (a << 24);
-    }
-
-    public static int color(int r, int g, int b, int a) {
-        return new Color(r, g, b, a).getRGB();
-    }
-
-    public static int color(float r, float g, float b, float a) {
-        return new Color(r, g, b, a).getRGB();
     }
 
     static public float colorcalc(int c, int location) {

@@ -1,6 +1,7 @@
 package Method.Client.utils.Screens.Override;
 
 import Method.Client.utils.Screens.Screen;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreenBook;
 import net.minecraft.nbt.NBTTagString;
@@ -13,7 +14,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class BookInsert extends Screen {
-    @Override
+    @Subscribe
     public void GuiScreenEventInit(GuiScreenEvent.InitGuiEvent.Post event) {
         if (event.getGui() instanceof GuiScreenBook) {
             event.getButtonList().add(new GuiButton(3334, event.getGui().width / 2 + 80, 50, 50, 20, "Fillmax"));
@@ -30,7 +31,7 @@ public class BookInsert extends Screen {
     }
 
 
-    @Override
+    @Subscribe
     public void GuiScreenEventPost(GuiScreenEvent.ActionPerformedEvent.Post event) {
         if (event.getGui() instanceof GuiScreenBook) {
             GuiScreenBook Gui = (GuiScreenBook) event.getGui();

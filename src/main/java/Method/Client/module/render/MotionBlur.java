@@ -3,6 +3,7 @@ package Method.Client.module.render;
 import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.client.resources.IResource;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.SimpleReloadableResourceManager;
@@ -51,7 +52,7 @@ public class MotionBlur extends Module {
         domainResourceManagers = null;
     }
 
-    @Override
+    @Subscribe
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (old != blurAmount.getValDouble()) {
             old = blurAmount.getValDouble();
@@ -61,6 +62,7 @@ public class MotionBlur extends Module {
         }
         if (domainResourceManagers == null) {
             try {
+                domainResourceManagers = (Map) mc.getResourceManager();
                 Field[] var2 = SimpleReloadableResourceManager.class.getDeclaredFields();
                 for (Field field : var2) {
                     if (field.getType() == Map.class) {

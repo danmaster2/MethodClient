@@ -1,12 +1,13 @@
 package Method.Client.utils.SeedViewer;
 
 import Method.Client.utils.system.Wrapper;
-import com.google.common.collect.Sets;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.storage.SaveDataMemoryStorage;
 import net.minecraft.world.storage.SaveHandlerMP;
@@ -18,14 +19,16 @@ public class AwesomeWorld extends World {
     {
         return (ChunkProviderClient)super.getChunkProvider();
     }
+
     private ChunkProviderClient clientChunkProvider;
+    public final Long2ObjectMap<Chunk> loadedChunks = new Long2ObjectOpenHashMap<>(8192);
 
     protected AwesomeWorld(WorldInfo worldInfo) {
         super(new SaveHandlerMP(), worldInfo, net.minecraftforge.common.DimensionManager.createProviderFor(0), Wrapper.mc.profiler, true);
 
         this.getWorldInfo().setDifficulty(EnumDifficulty.PEACEFUL);
         this.provider.setWorld(this);
-        this.setSpawnPoint(new BlockPos(8, 64, 8)); //Forge: Moved below registerWorld to prevent NPE in our redirect.
+        this.setSpawnPoint(new BlockPos(8, 64, 8));
         this.chunkProvider = this.createChunkProvider();
         this.mapStorage = new SaveDataMemoryStorage();
         this.calculateInitialSkylight();
@@ -45,4 +48,5 @@ public class AwesomeWorld extends World {
     {
         return allowEmpty || !this.getChunkProvider().provideChunk(x, z).isEmpty();
     }
+
 }

@@ -2,123 +2,108 @@ package Method.Client.utils.SeedViewer;
 
 
 import Method.Client.utils.system.Wrapper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.GameType;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
-import net.minecraft.world.biome.BiomeForest;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.gen.ChunkGeneratorHell;
-import net.minecraft.world.gen.ChunkGeneratorOverworld;
 import net.minecraft.world.gen.IChunkGenerator;
 import net.minecraft.world.storage.WorldInfo;
-import net.minecraftforge.event.terraingen.DecorateBiomeEvent;
-import net.minecraftforge.event.terraingen.PopulateChunkEvent;
-import net.minecraftforge.fml.common.eventhandler.Event;
 
-import java.util.Random;
+import java.util.ArrayList;
 
 public class WorldLoader {
 
-    public static IChunkGenerator ChunkGenerator;
+    public static ArrayList<IChunkGenerator> ChunkGenerator = new ArrayList<>();
     public static long seed = 44776655;
     public static boolean GenerateStructures = true;
-    public static AwesomeWorld fakeworld;
-
-    public static Random rand;
+    public static ArrayList<AwesomeWorld> combinationWorld = new ArrayList<>();
+    public static WorldInfo worldInfo;
 
     public static void setup() {
         WorldSettings worldSettings = new WorldSettings(seed, GameType.SURVIVAL, GenerateStructures, false, WorldType.DEFAULT);
-        WorldInfo worldInfo = new WorldInfo(worldSettings, "FakeWorld");
+        worldInfo = new WorldInfo(worldSettings, "awesomeWorld");
         worldInfo.setMapFeaturesEnabled(true);
-        fakeworld = new AwesomeWorld(worldInfo);
-        if (Wrapper.mc.player.dimension == -1)
-            ChunkGenerator = new ChunkGeneratorHell(fakeworld, fakeworld.getWorldInfo().isMapFeaturesEnabled(), seed);
-        else
-            ChunkGenerator = fakeworld.provider.createChunkGenerator();
-
     }
 
-    public static Chunk CreateChunk(int x, int z, int dis) {
+    public static void PopulateCombinations(int x, int z, AwesomeWorld combinationWorld, int i) {
+        int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};  // West, East, North, South
 
-        // ok so I have spent about 30 hours trying to figure this out, I know I can start an integrated server but that should be no
-        // different. At one point I remade each and every generator for all the biomes to remove the forge check calls, but that did not work
-        // Most chunks work fine... Then there is roofed forest which kills itself, I think it may have to do with it being a mutated biome
-        // with a base biome under it. If you have any advice let me know.
-
-        // I left old code in if it may help.
-
-
-        Chunk Testchunk;
-        if (dis == -1) {
-            if (!(ChunkGenerator instanceof ChunkGeneratorHell))
-                ChunkGenerator = new ChunkGeneratorHell(fakeworld, fakeworld.getWorldInfo().isMapFeaturesEnabled(), seed);
-        }
-
-        if (!fakeworld.isChunkGeneratedAt(x, z))
-            Testchunk = ChunkGenerator.generateChunk(x, z);
-        else Testchunk = fakeworld.getChunk(x, z);
-
-        fakeworld.getChunkProvider().loadedChunks.put(ChunkPos.asLong(x, z), Testchunk);
-        Testchunk.onLoad();
-        populate(fakeworld.getChunkProvider(), ChunkGenerator, x, z);
-
-        return Testchunk;
-    }
-
-    public static void populate(IChunkProvider chunkProvider, IChunkGenerator chunkGenrator, int x, int z) {
-        Chunk chunk = chunkProvider.getLoadedChunk(x, z - 1);
-        Chunk chunk1 = chunkProvider.getLoadedChunk(x + 1, z);
-        Chunk chunk2 = chunkProvider.getLoadedChunk(x, z + 1);
-        Chunk chunk3 = chunkProvider.getLoadedChunk(x - 1, z);
-
-        if (chunk1 != null && chunk2 != null && chunkProvider.getLoadedChunk(x + 1, z + 1) != null) {
-            Awesomepopulate(chunkGenrator, fakeworld, x, z);
-        }
-
-        if (chunk3 != null && chunk2 != null && chunkProvider.getLoadedChunk(x - 1, z + 1) != null) {
-            Awesomepopulate(chunkGenrator, fakeworld, x - 1, z);
-        }
-
-        if (chunk != null && chunk1 != null && chunkProvider.getLoadedChunk(x + 1, z - 1) != null) {
-            Awesomepopulate(chunkGenrator, fakeworld, x, z - 1);
-        }
-
-        if (chunk != null && chunk3 != null) {
-            Chunk chunk4 = chunkProvider.getLoadedChunk(x - 1, z - 1);
-
-            if (chunk4 != null) {
-                Awesomepopulate(chunkGenrator, fakeworld, x - 1, z - 1);
+        // Iterate over 2^4 = 16 combinations
+        for (int j = 0; j < 4; j++) {
+            // Use bitwise shift and AND operations to determine if this square should be included
+            if (((i >> j) & 1) == 1) {
+                int newX = x + directions[j][0];
+                int newZ = z + directions[j][1];
+                ChunkGenerator.get(i).populate(newX, newZ);
             }
         }
     }
 
 
-    private static void Awesomepopulate(IChunkGenerator overworldChunkGen, AwesomeWorld fakeworld, int x, int z) {
-        Chunk testchunk = fakeworld.getChunk(x, z);
-        if (testchunk.isTerrainPopulated()) {
-            if (overworldChunkGen.generateStructures(testchunk, x, z)) {
-                testchunk.markDirty();
-            }
-        } else {
-            testchunk.checkLight();
-            overworldChunkGen.populate(x, z);
-            testchunk.markDirty();
+    public static Chunk CreateChunknoPop(int x, int z) {
+        combinationWorld.clear();
+        ChunkGenerator.clear();
+        for (int i = 0; i < 16; i++) {
+            combinationWorld.add(new AwesomeWorld(worldInfo));
+            if (Wrapper.mc.player.dimension == -1)
+                ChunkGenerator.add(new ChunkGeneratorHell(combinationWorld.get(i), combinationWorld.get(i).getWorldInfo().isMapFeaturesEnabled(), seed));
+            else
+                ChunkGenerator.add(new net.minecraft.world.gen.ChunkGeneratorOverworld(combinationWorld.get(i), combinationWorld.get(i).getSeed(),
+                        combinationWorld.get(i).getWorldInfo().isMapFeaturesEnabled(), combinationWorld.get(i).getWorldInfo().getGeneratorOptions()));
         }
+        for (int i = 0; i < 16; i++) {
+            for (int j = 0; j < 9; j++) {
+                int nx = x - 1 + (j % 3);
+                int nz = z - 1 + (j / 3);
+                Chunk testchunk = ChunkGenerator.get(i).generateChunk(nx, nz);
+                combinationWorld.get(i).getChunkProvider().loadedChunks.put(ChunkPos.asLong(nx, nz), testchunk);
+                testchunk.onLoad();
+            }
+        }
+
+        for (int i = 0; i < 16; i++) {
+            PopulateCombinations(x, z, combinationWorld.get(i), i);
+        }
+
+        int bestworld = 0;
+        int bestblocks = 0;
+        for (int i = 0; i < 16; i++) {
+            Chunk testchunk = combinationWorld.get(i).getChunk(x, z);
+            testchunk.populate(ChunkGenerator.get(i));
+            int blocks = SearchChunk(testchunk);
+            if (blocks > bestblocks) {
+                bestblocks = blocks;
+                bestworld = i;
+            }
+        }
+
+        return combinationWorld.get(bestworld).getChunk(x, z);
     }
 
+    private static int SearchChunk(Chunk chunk) {
+        try {
+            int localbest = 0;
+            for (int x = chunk.getPos().getXStart(); x <= chunk.getPos().getXEnd(); x++) {
+                for (int z = chunk.getPos().getZStart(); z <= chunk.getPos().getZEnd(); z++) {
+                    for (int y = 0; y < 255; y++) {
+                        // if chunk block is the same as the world block
+                        if (chunk.getBlockState(new BlockPos(x, y, z)).getBlock() == Minecraft.getMinecraft().world.getBlockState(new BlockPos(x, y, z)).getBlock())
+                            localbest++;
 
-    // Removed all forge calls
-
-
-    public static void event(PopulateChunkEvent.Populate event) {
-        event.setResult(Event.Result.ALLOW);
+                    }
+                }
+            }
+            return localbest;
+        } catch (
+                Exception ignored) {
+        }
+        return 0;
     }
 
-    public static void DecorateBiomeEvent(DecorateBiomeEvent.Decorate event) {
-        event.setResult(Event.Result.ALLOW);
-    }
 }
 
 

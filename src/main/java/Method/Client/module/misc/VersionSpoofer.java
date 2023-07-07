@@ -5,6 +5,7 @@ import Method.Client.managers.Setting;
 import Method.Client.module.Category;
 import Method.Client.module.Module;
 import Method.Client.utils.system.Connection;
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.network.handshake.client.C00Handshake;
 import net.minecraft.realms.RealmsSharedConstants;
 import org.lwjgl.input.Keyboard;
@@ -25,7 +26,6 @@ public class VersionSpoofer extends Module {
     @Override
     public void onEnable() {
         RealmsSharedConstants.NETWORK_PROTOCOL_VERSION = version();
-
     }
 
     @Override
@@ -33,6 +33,14 @@ public class VersionSpoofer extends Module {
         if (packet instanceof C00Handshake) {
             ((C00Handshake) packet).protocolVersion = version();
         }
+        return true;
+    }
+
+    public boolean onPacket(Object packet, Connection.Side side) {
+        if (packet instanceof C00Handshake) {
+            ((C00Handshake) packet).protocolVersion = version();
+        }
+
         return true;
     }
 

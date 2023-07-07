@@ -44,7 +44,7 @@ public class ChatMutator extends Module {
                 packet2.message = fancy(packet2.message);
 
             if (mode.getValString().equalsIgnoreCase("DUMB"))
-                packet2.message = retard(packet2.message);
+                packet2.message = dumb(packet2.message);
 
             if (mode.getValString().equalsIgnoreCase("CONSOLE"))
                 packet2.message = console(packet2.message);
@@ -80,7 +80,7 @@ public class ChatMutator extends Module {
         return sb.toString();
     }
 
-    public String retard(String input) {
+    public String dumb(String input) {
         final StringBuilder sb = new StringBuilder(input);
 
         for (int i = 0; i < sb.length(); i += 2) {

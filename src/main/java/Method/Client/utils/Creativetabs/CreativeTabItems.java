@@ -19,9 +19,14 @@ public class CreativeTabItems extends CreativeTabs {
 
     public CreativeTabItems() {
         super("Items");
+        this.tabLabel = "Items";
     }
     @Override
     public String getTabLabel() {
+        return "Items";
+    }
+    @Override
+    public String getTranslationKey() {
         return "Items";
     }
     @Override

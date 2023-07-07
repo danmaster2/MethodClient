@@ -4,6 +4,7 @@ import Method.Client.clickgui.component.Component;
 import Method.Client.clickgui.component.Frame;
 import Method.Client.clickgui.component.components.sub.*;
 import Method.Client.managers.Setting;
+import Method.Client.module.Category;
 import Method.Client.module.Module;
 import Method.Client.module.misc.GuiModule;
 import Method.Client.utils.font.CFontRenderer;
@@ -12,7 +13,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -25,35 +25,28 @@ public class Button extends Component {
 
     public Module mod;
     public Frame parent;
-    public int offset;
-    private boolean isHovered;
-
     private boolean saveisHovered;
-    private boolean deleteisHovered;
-
-
+    private boolean allmodsSaveHovered;
     private double Animate;
     private final ArrayList<Component> subcomponents;
     private final ArrayList<Component> Inviscomponents;
-
-    public static CFontRenderer ButtonFont;
-    public static CFontRenderer SubcomponentFont;
-
+    public static CFontRenderer buttonFont;
+    public static CFontRenderer subcomponentFont;
     public boolean open;
-    public int opentiming;
     protected Minecraft mc = Minecraft.getMinecraft();
 
     public Button(Module mod, Frame parent, int offset) {
+        this.hovered = false;
         this.mod = mod;
         this.parent = parent;
         this.offset = offset;
         this.saveisHovered = false;
-        this.deleteisHovered = false;
+        this.allmodsSaveHovered = false;
         this.subcomponents = new ArrayList<>();
         this.Inviscomponents = new ArrayList<>();
         this.open = false;
         int opY = offset + 12;
-        if (setmgr.getSettingsByMod(mod) != null) {
+        if (setmgr.getSettingsByMod(mod) != null)
             for (Setting s : setmgr.getSettingsByMod(mod)) {
                 if (s.isCombo()) {
                     this.subcomponents.add(new ModeButton(s, this, opY));
@@ -75,27 +68,29 @@ public class Button extends Component {
                     this.subcomponents.add(new Guibutton(s, this, opY, s.getScreen()));
                     opY += 12;
                 }
+                if (s.isSub()) {
+                    this.subcomponents.add(new Guibutton(s, this, opY, s.getSubGui()));
+                    opY += 12;
+                }
             }
-        }
         this.subcomponents.add(new Keybind(this, opY));
         this.subcomponents.add(new VisibleButton(this, mod, opY));
     }
 
     public static void updateFont() {
         if (GuiModule.Button.getValString().equalsIgnoreCase("Arial"))
-            ButtonFont = afontRenderer22;
+            buttonFont = afontRenderer22;
         if (GuiModule.Button.getValString().equalsIgnoreCase("Times"))
-            ButtonFont = tfontRenderer22;
+            buttonFont = tfontRenderer22;
         if (GuiModule.Button.getValString().equalsIgnoreCase("Impact"))
-            ButtonFont = ifontRenderer22;
+            buttonFont = ifontRenderer22;
 
         if (GuiModule.Subcomponents.getValString().equalsIgnoreCase("Arial"))
-            SubcomponentFont = afontRenderer18;
+            subcomponentFont = afontRenderer18;
         if (GuiModule.Subcomponents.getValString().equalsIgnoreCase("Times"))
-            SubcomponentFont = tfontRenderer18;
+            subcomponentFont = tfontRenderer18;
         if (GuiModule.Subcomponents.getValString().equalsIgnoreCase("Impact"))
-            SubcomponentFont = ifontRenderer18;
-
+            subcomponentFont = ifontRenderer18;
     }
 
     @Override
@@ -111,18 +106,18 @@ public class Button extends Component {
     @Override
     public void renderComponent() {
         glEnable(GL_BLEND);
-        if (this.getCategory().equalsIgnoreCase("PROFILES")) {
+        if (this.mod.getCategory().equals(Category.PROFILES)) {
             Gui.drawRect(parent.getX() + 50, this.parent.getY() + this.offset, parent.getX() + 60, this.parent.getY() + 12 + this.offset, 0x6612a212);
             Gui.drawRect(parent.getX() + 65, this.parent.getY() + this.offset, parent.getX() + 75, this.parent.getY() + 12 + this.offset, 0x66f83a32);
         }
-        Gui.drawRect(parent.getX(), this.parent.getY() + this.offset, parent.getX() + parent.getWidth(), this.parent.getY() + 12 + this.offset, this.isHovered ? (GuiModule.Hover.getcolor()) : GuiModule.Background.getcolor());
+        Gui.drawRect(parent.getX(), this.parent.getY() + this.offset, parent.getX() + parent.getWidth(), this.parent.getY() + 12 + this.offset, this.hovered ? (GuiModule.Hover.getcolor()) : GuiModule.Background.getcolor());
         Gui.drawRect(parent.getX(), this.parent.getY() + this.offset, (int) (parent.getX() + this.Animate), this.parent.getY() + 12 + this.offset, GuiModule.ColorAni.getcolor());
         GlStateManager.pushMatrix();
-        if (this.getCategory().equalsIgnoreCase("PROFILES"))
-            fontSelect("S   D", (float) (parent.getX() + 2) + 49, (float) (parent.getY() + offset + 2.5), this.mod.isToggled() ? 0xA6a83a32 : -1);
-        fontSelect(this.mod.getName(), (float) (parent.getX() + 2), (float) (parent.getY() + offset + 2.5) - 2, this.mod.isToggled() ? 0xA6a83a32 : -1);
+        if (this.mod.getCategory().equals(Category.PROFILES))
+            fontSelect("S   A", (float) (parent.getX() + 2) + 49, (float) (parent.getY() + offset + 2.5), this.mod.isToggled() ? 0xA6a83a32 : -1);
+        fontSelect(this.mod.getName(), (float) (parent.getX() + 2), (float) (parent.getY() + offset + 2.5) - 1, this.mod.isToggled() ? 0x96a83a32 : -1);
         if (this.subcomponents.size() > 2)
-            fontSelect(this.open ? "-" : "+", (float) (parent.getX() + parent.getWidth() - 10), (float) (parent.getY() + offset + 2.5) - 2, -1);
+            fontSelect(this.open ? "-" : "+", (float) (parent.getX() + parent.getWidth() - 10), (float) (parent.getY() + offset + 2.5) - 1, -1);
         GlStateManager.popMatrix();
         if (this.open) {
             if (!this.subcomponents.isEmpty()) {
@@ -137,7 +132,7 @@ public class Button extends Component {
     public void RenderTooltip() {
         if (!this.subcomponents.isEmpty())
             subcomponents.forEach(Component::RenderTooltip);
-        if (this.isHovered) {
+        if (this.hovered) {
             Gui.drawRect(0, (int) (mc.displayHeight / 2.085), (int) (this.mod.getTooltip().length() * 5.1), (int) (mc.displayHeight / 2.085) + 10, 0x4D222222);
             fontSelect(this.mod.getTooltip(), 0, (float) (mc.displayHeight / 2.085), this.mod.isToggled() ? 0xA6999999 : -1);
         }
@@ -168,18 +163,21 @@ public class Button extends Component {
     }
 
     @Override
-    public void updateComponent(int mouseX, int mouseY) throws IOException {
-        this.isHovered = isMouseOnButton(mouseX, mouseY);
-        if (this.getCategory().equalsIgnoreCase("PROFILES")) {
-            this.saveisHovered = ProfileisMouseOnButton(mouseX, mouseY, false);
-            this.deleteisHovered = ProfileisMouseOnButton(mouseX, mouseY, true);
-        }
-        if (this.isHovered && this.Animate < parent.getWidth()) {
+    public void runAnimation() {
+        if (this.hovered && this.Animate < parent.getWidth()) {
             this.Animate += GuiModule.Anispeed.getValDouble();
         }
-        if (!this.isHovered && this.Animate > 0)
+        if (!this.hovered && this.Animate > 0)
             this.Animate -= GuiModule.Anispeed.getValDouble();
+    }
 
+    @Override
+    public void updateComponent(int mouseX, int mouseY) {
+        super.updateComponent(mouseX, mouseY);
+        if (this.mod.getCategory().equals(Category.PROFILES)) {
+            this.saveisHovered = ProfileisMouseOnButton(mouseX, mouseY, false);
+            this.allmodsSaveHovered = ProfileisMouseOnButton(mouseX, mouseY, true);
+        }
         if (!this.subcomponents.isEmpty()) {
             for (Component comp : this.subcomponents) {
                 comp.updateComponent(mouseX, mouseY);
@@ -187,35 +185,39 @@ public class Button extends Component {
         }
     }
 
-    public static void fontSelect(String name, float v, float v1, int i) {
+    public static void fontSelect(String name, float x, float y, int i) {
         if (GuiModule.Button.getValString().equalsIgnoreCase("MC"))
-            Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(name, (int) v, (int) v1, i);
-        else
-            ButtonFont.drawStringWithShadow(name, v, v1, i);
+            Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(name, x, y, i);
+
+        else {
+            buttonFont.drawStringWithShadow(name, x, y, i);
+        }
     }
 
-    public static void fontSelectButton(String name, float v, float v1, int i) {
+    public static void fontSelectButton(String name, float x, float y, int color) {
         if (GuiModule.Subcomponents.getValString().equalsIgnoreCase("MC"))
-            Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(name, (int) v, (int) v1, i);
+            Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(name, x, y, color);
+
         else
-            SubcomponentFont.drawStringWithShadow(name, v, v1, i);
+            subcomponentFont.drawStringWithShadow(name, x, y, color);
     }
 
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int button) {
-        if (this.isHovered && button == 0) {
-            if (this.getCategory().equalsIgnoreCase("PROFILES")) {
-                if (this.saveisHovered)
+        if (this.hovered && button == 0) {
+            if (this.mod.getCategory().equals(Category.PROFILES)) {
+                if (this.saveisHovered) {
                     this.mod.setsave();
-                else if (this.deleteisHovered) {
-                    this.mod.setdelete();
                     return;
-                } else this.mod.toggle();
-            } else
-                this.mod.toggle();
+                } else if (this.allmodsSaveHovered) {
+                    this.mod.setAll();
+                    return;
+                }
+            }
+            this.mod.toggle();
         }
-        if (this.isHovered && button == 1) {
+        if (this.hovered && button == 1) {
             this.open = !this.open;
             this.parent.refresh();
         }
@@ -227,18 +229,22 @@ public class Button extends Component {
 
     private void CheckInvis() {
         if (setmgr.getSettingsByMod(mod) != null) {
-
             for (Setting s : setmgr.getSettingsByMod(mod)) {
                 if (s.getDependant() != null) {
 
-                    double index = 0;
+                    int index = 0;
                     Component Compnt = null;
 
                     for (Component com : Objects.requireNonNull(s.getDependant().isCheck() ? s.getDependant().getValBoolean() ? this.Inviscomponents : this.subcomponents :
                             s.getDependant().isCombo() ? s.getDependant().getValString().equalsIgnoreCase(s.getselected()) ? this.Inviscomponents : this.subcomponents : null))
                         if (com.getName().equalsIgnoreCase(s.getName())) {
                             Compnt = com;
-                            index = s.GetIndex();
+                            for (int i = 0; i < subcomponents.size(); i++) {
+                                if (subcomponents.get(i).getName().equalsIgnoreCase(s.getDependant().getName())) {
+                                    index = i + 1;
+                                    break;
+                                }
+                            }
                             break;
                         }
                     if (Compnt != null) Updateinvis(Compnt, index);
@@ -255,6 +261,8 @@ public class Button extends Component {
         else this.Inviscomponents.add(compnt);
 
         this.parent.refresh();
+
+
     }
 
     @Override

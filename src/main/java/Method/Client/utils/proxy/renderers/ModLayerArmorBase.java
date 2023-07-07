@@ -19,7 +19,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.Map;
 
-import static Method.Client.utils.proxy.Overrides.ColorMix.*;
+import static Method.Client.utils.proxy.Overrides.EntityrenderOverride.*;
 
 @SideOnly(Side.CLIENT)
 public abstract class ModLayerArmorBase<T extends ModelBase> implements LayerRenderer<EntityLivingBase> {

@@ -17,7 +17,8 @@ public class InvMove extends Module {
         super("Inv Move", Keyboard.KEY_NONE, Category.MOVEMENT, "Inventory Move");
     }
 
-
+    // Yea there is a Bytecode inject for this but honestly this is easier to read and understand.
+    // see MoveOverride in Method.Client.utils.proxy.Overrides
     public static boolean runthething() {
         if (InvMove.Toggled) {
             mc.player.movementInput.moveStrafe = 0.0F;

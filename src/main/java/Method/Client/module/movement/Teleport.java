@@ -7,8 +7,8 @@ import Method.Client.module.Module;
 import Method.Client.utils.Utils;
 import Method.Client.utils.system.Connection;
 import Method.Client.utils.system.Wrapper;
-import net.minecraft.block.*;
-import net.minecraft.block.state.IBlockState;
+import com.google.common.eventbus.Subscribe;
+import net.minecraft.block.Block;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.entity.player.EntityPlayer;
@@ -16,6 +16,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.network.play.client.CPacketPlayer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -80,7 +81,7 @@ public class Teleport extends Module {
     }
 
 
-    @Override
+    @Subscribe
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (mode.getValString().equalsIgnoreCase("Flight")) {
             RayTraceResult object = Wrapper.INSTANCE.mc().objectMouseOver;
@@ -112,7 +113,6 @@ public class Teleport extends Module {
         } else {
             canDraw = false;
             mc.player.getEntityAttribute(EntityPlayer.REACH_DISTANCE).setBaseValue(reach);
-
         }
         if (teleportPosition != null && delay == 0 && Mouse.isButtonDown(1)) {
             Mathteleport();
@@ -122,16 +122,14 @@ public class Teleport extends Module {
         if (delay > 0) {
             delay--;
         }
-        super.onClientTick(event);
     }
 
     private void Mathteleport() {
         if (math.getValBoolean()) {
-            double[] playerPosition = new double[]{mc.player.posX, mc.player.posY, mc.player.posZ};
-            double[] blockPosition = new double[]{teleportPosition.getX() + 0.5F, teleportPosition.getY() + getOffset(mc.world.getBlockState(teleportPosition).getBlock(), teleportPosition) + 1.0F, teleportPosition.getZ() + 0.5F};
+            Vec3d blockPosition = new Vec3d(teleportPosition.getX(),teleportPosition.getY(), teleportPosition.getZ());
 
-            Utils.teleportToPosition(playerPosition, blockPosition, 0.25D, 0.0D, true, true);
-            mc.player.setPosition(blockPosition[0], blockPosition[1], blockPosition[2]);
+            Utils.teleportToPosition(blockPosition);
+            mc.player.setPosition(blockPosition.x, blockPosition.y, blockPosition.z);
 
             teleportPosition = null;
         } else {
@@ -146,61 +144,55 @@ public class Teleport extends Module {
         }
     }
 
-    @Override
+    @Subscribe
     public void onLivingUpdate(LivingEvent.LivingUpdateEvent event) {
         if (!mode.getValString().equalsIgnoreCase("Flight")) {
             return;
         }
-        EntityPlayerSP player = mc.player;
-        GameSettings settings = Wrapper.INSTANCE.mcSettings();
+
         if (!passPacket) {
-            player.noClip = true;
-            player.fallDistance = 0;
-            player.onGround = true;
-            player.capabilities.isFlying = false;
-            player.motionX = 0.0F;
-            player.motionY = 0.0F;
-            player.motionZ = 0.0F;
+            mc.player.noClip = true;
+            mc.player.fallDistance = 0;
+            mc.player.onGround = true;
+            mc.player.capabilities.isFlying = false;
+            mc.player.motionX = 0.0F;
+            mc.player.motionY = 0.0F;
+            mc.player.motionZ = 0.0F;
             float speed = 0.5f;
-            if (settings.keyBindJump.isKeyDown()) {
-                player.motionY += speed;
+            if (mc.gameSettings.keyBindJump.isKeyDown()) {
+                mc.player.motionY += speed;
             }
-            if (settings.keyBindSneak.isKeyDown()) {
-                player.motionY -= speed;
+            if (mc.gameSettings.keyBindSneak.isKeyDown()) {
+                mc.player.motionY -= speed;
             }
-            double d7 = player.rotationYaw + 90F;
-            boolean flag4 = settings.keyBindForward.isKeyDown();
-            boolean flag6 = settings.keyBindBack.isKeyDown();
-            boolean flag8 = settings.keyBindLeft.isKeyDown();
-            boolean flag10 = settings.keyBindRight.isKeyDown();
-            if (flag4) {
-                if (flag8) {
-                    d7 -= 45D;
-                } else if (flag10) {
-                    d7 += 45D;
+            double MovSpeed = mc.player.rotationYaw + 90F;
+            if (mc.gameSettings.keyBindForward.isKeyDown()) {
+                if (mc.gameSettings.keyBindLeft.isKeyDown()) {
+                    MovSpeed -= 45D;
+                } else if (mc.gameSettings.keyBindRight.isKeyDown()) {
+                    MovSpeed += 45D;
                 }
-            } else if (flag6) {
-                d7 += 180D;
-                if (flag8) {
-                    d7 += 45D;
-                } else if (flag10) {
-                    d7 -= 45D;
+            } else if (mc.gameSettings.keyBindBack.isKeyDown()) {
+                MovSpeed += 180D;
+                if (mc.gameSettings.keyBindLeft.isKeyDown()) {
+                    MovSpeed += 45D;
+                } else if (mc.gameSettings.keyBindRight.isKeyDown()) {
+                    MovSpeed -= 45D;
                 }
-            } else if (flag8) {
-                d7 -= 90D;
-            } else if (flag10) {
-                d7 += 90D;
+            } else if (mc.gameSettings.keyBindLeft.isKeyDown()) {
+                MovSpeed -= 90D;
+            } else if (mc.gameSettings.keyBindRight.isKeyDown()) {
+                MovSpeed += 90D;
             }
-            if (flag4 || flag8 || flag6 || flag10) {
-                player.motionX = Math.cos(Math.toRadians(d7));
-                player.motionZ = Math.sin(Math.toRadians(d7));
+            if (mc.gameSettings.keyBindForward.isKeyDown() || mc.gameSettings.keyBindLeft.isKeyDown() || mc.gameSettings.keyBindBack.isKeyDown() || mc.gameSettings.keyBindRight.isKeyDown()) {
+                mc.player.motionX = Math.cos(Math.toRadians(MovSpeed));
+                mc.player.motionZ = Math.sin(Math.toRadians(MovSpeed));
             }
         }
-        super.onLivingUpdate(event);
     }
 
 
-    @Override
+    @Subscribe
     public void onRenderWorldLast(RenderWorldLastEvent event) {
         if (mode.getValString().equalsIgnoreCase("Flight")) {
             if (teleportPosition == null) {
@@ -233,7 +225,6 @@ public class Teleport extends Module {
         } else {
             teleportPosition = null;
         }
-        super.onRenderWorldLast(event);
     }
 
     private boolean BlockTeleport(double[] mouseOverPos) {
@@ -259,12 +250,16 @@ public class Teleport extends Module {
         Block blockAbovePos = mc.world.getBlockState(new BlockPos(mouseOverPos[0], mouseOverPos[1] + 1.0F, mouseOverPos[2])).getBlock();
 
         boolean validBlockBelow = blockBelowPos.getCollisionBoundingBox(mc.world.getBlockState(
-                new BlockPos(mouseOverPos[0], mouseOverPos[1] - 1.0F, mouseOverPos[2])),
+                        new BlockPos(mouseOverPos[0], mouseOverPos[1] - 1.0F, mouseOverPos[2])),
                 mc.world, new BlockPos(mouseOverPos[0], mouseOverPos[1] - 1.0F, mouseOverPos[2])) != null;
 
 
-        boolean validBlock = isValidBlock(blockPos);
-        boolean validBlockAbove = isValidBlock(blockAbovePos);
+        boolean validBlock = blockPos.getCollisionBoundingBox(mc.world.getBlockState(
+                        new BlockPos(mouseOverPos[0], mouseOverPos[1], mouseOverPos[2])),
+                mc.world, new BlockPos(mouseOverPos[0], mouseOverPos[1], mouseOverPos[2])) == null;
+        boolean validBlockAbove = blockAbovePos.getCollisionBoundingBox(mc.world.getBlockState(
+                        new BlockPos(mouseOverPos[0], mouseOverPos[1] + 1.0F, mouseOverPos[2])),
+                mc.world, new BlockPos(mouseOverPos[0], mouseOverPos[1] + 1.0F, mouseOverPos[2])) == null;
 
         if ((validBlockBelow && validBlock && validBlockAbove)) {
             canTeleport = true;
@@ -273,39 +268,5 @@ public class Teleport extends Module {
         return canTeleport;
     }
 
-    public double getOffset(Block block, BlockPos pos) {
-        IBlockState state = mc.world.getBlockState(pos);
-
-        double offset = 0;
-
-        if (block instanceof BlockSlab && !((BlockSlab) block).isDouble()) {
-            offset -= 0.5F;
-        } else if (block instanceof BlockEndPortalFrame) {
-            offset -= 0.2F;
-        } else if (block instanceof BlockBed) {
-            offset -= 0.44F;
-        } else if (block instanceof BlockCake) {
-            offset -= 0.5F;
-        } else if (block instanceof BlockDaylightDetector) {
-            offset -= 0.625F;
-        } else if (block instanceof BlockRedstoneComparator || block instanceof BlockRedstoneRepeater) {
-            offset -= 0.875F;
-        } else if (block instanceof BlockChest || block == Blocks.ENDER_CHEST) {
-            offset -= 0.125F;
-        } else if (block instanceof BlockLilyPad) {
-            offset -= 0.95F;
-        } else if (block == Blocks.SNOW_LAYER) {
-            offset -= 0.875F;
-            offset += 0.125F * (state.getValue(BlockSnow.LAYERS) - 1);
-        } else if (isValidBlock(block)) {
-            offset -= 1.0F;
-        }
-
-        return offset;
-    }
-
-    public boolean isValidBlock(Block block) {
-        return block == Blocks.PORTAL || block == Blocks.SNOW_LAYER || block instanceof BlockTripWireHook || block instanceof BlockTripWire || block instanceof BlockDaylightDetector || block instanceof BlockRedstoneComparator || block instanceof BlockRedstoneRepeater || block instanceof BlockSign || block instanceof BlockAir || block instanceof BlockPressurePlate || block instanceof BlockTallGrass || block instanceof BlockFlower || block instanceof BlockMushroom || block instanceof BlockDoublePlant || block instanceof BlockReed || block instanceof BlockSapling || block == Blocks.CARROTS || block == Blocks.WHEAT || block == Blocks.NETHER_WART || block == Blocks.POTATOES || block == Blocks.PUMPKIN_STEM || block == Blocks.MELON_STEM || block == Blocks.HEAVY_WEIGHTED_PRESSURE_PLATE || block == Blocks.LIGHT_WEIGHTED_PRESSURE_PLATE || block == Blocks.REDSTONE_WIRE || block instanceof BlockTorch || block == Blocks.LEVER || block instanceof BlockButton;
-    }
 
 }

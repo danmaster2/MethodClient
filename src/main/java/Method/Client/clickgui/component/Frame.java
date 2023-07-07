@@ -30,7 +30,7 @@ public class Frame {
     private int width;
     private int y;
     private int x;
-    private int Bottomy;
+    private int bottomY;
     private int scrollpos;
     private int CollapseRate;
     private final int barHeight;
@@ -64,7 +64,7 @@ public class Frame {
             this.components.add(modButton);
             tY += this.barHeight;
         }
-        this.Bottomy = tY;
+        this.bottomY = tY;
     }
 
     public static void updateFont() {
@@ -76,8 +76,12 @@ public class Frame {
             FrameFont = CFont.ifontRenderer26;
     }
 
-    public ArrayList<Component> getComponents() {
-        return components;
+    public void refresh() {
+        int off = this.barHeight;
+        for (Component comp : this.components) {
+            comp.setOff(off);
+            off += comp.getHeight();
+        }
     }
 
     public void updateRefresh() {
@@ -88,86 +92,54 @@ public class Frame {
             this.components.add(modButton);
             tY += this.barHeight;
         }
-        this.Bottomy = tY;
-    }
-
-
-    public void setX(int newX) {
-        this.x = newX;
-    }
-
-    public void setY(int newY) {
-        this.y = newY;
-    }
-
-    public void setWidth(int width) {
-        this.width = width;
-    }
-
-    public void setBottomy(int setby) {
-        this.Bottomy = setby;
-    }
-
-    public void setScrollpos(int NewY) {
-        this.scrollpos = NewY;
-    }
-
-    public void setDrag(boolean drag) {
-        this.isDragging = drag;
-    }
-
-    public void setDragBot(boolean drag) {
-        this.isDraggingBot = drag;
-    }
-
-    public boolean isOpen() {
-        return open;
-    }
-
-    public void setOpen(boolean open) {
-        this.open = open;
-        if (open) {
-            this.wasopen = true;
-        }
+        this.bottomY = tY;
     }
 
     public void renderFrame() {
-        if (mc.currentScreen instanceof ClickGui && this.category.name().equalsIgnoreCase("Onscreen")) {
-            this.setX((int) ((mc.displayWidth / 5.4) - this.width));
+        if ((this.category.equals(Category.ONSCREEN) && mc.currentScreen instanceof ClickGui)) {
+            this.setX((int) ((mc.displayWidth / 7.8)));
             this.setY(2);
-            this.setWidth(22);
+        }
+        if ((category.equals(Category.HISTORY))) {
+            this.setX((int) ((mc.displayWidth / 3)));
+            this.setY(2);
         }
         glEnable(GL_BLEND);
         Gui.drawRect(this.x, this.y, this.x + this.width, this.y + this.barHeight, GuiModule.Framecolor.getcolor());
-        if (this.open && !this.category.name().equalsIgnoreCase("Profiles") && this.CollapseRate < 5)
-            Gui.drawRect(this.x, this.Bottomy + this.scrollpos + this.y, this.x + this.width, this.Bottomy + this.barHeight + this.scrollpos + this.y, GuiModule.Framecolor.getcolor());
+        if (this.open && !this.category.equals(Category.PROFILES) && this.CollapseRate < 5)
+            Gui.drawRect(this.x, this.bottomY + this.scrollpos + this.y, this.x + this.width, this.bottomY + this.barHeight + this.scrollpos + this.y, GuiModule.Framecolor.getcolor());
         GlStateManager.pushMatrix();
-        if (!this.category.name().equalsIgnoreCase("Onscreen")) {
-            fontSelect(this.category.name(), this.x + 3, (float) (this.y + 2.5f - 1.5), -1);
+        fontSelect(this.category.name(), this.x + 3, (float) (this.y + 2.5f - 1.5), -1);
+        if (!this.category.equals(Category.ONSCREEN) && !this.category.equals(Category.HISTORY))
             fontSelect(this.open ? "-" : "+", this.x + this.width - 9, (float) ((this.y + 2.5f) - 1.5), -1);
-        }
         GlStateManager.popMatrix();
         mc.getTextureManager().bindTexture(new ResourceLocation(Main.MODID, this.getName().toLowerCase() + ".png"));
         Gui.drawModalRectWithCustomSizedTexture(this.x + this.width - this.barHeight - 6, this.y + 1, 0, 0, this.barHeight, this.barHeight, this.barHeight, this.barHeight);
         if ((this.open || (this.wasopen && GuiModule.Animations.getValBoolean())) && !this.components.isEmpty()) {
             if (!this.open) {
-                if (this.CollapseRate + this.barHeight + this.barHeight < (this.Bottomy + this.scrollpos - this.barHeight) * 2)
+                if (this.CollapseRate + (this.barHeight * 2) < (this.bottomY + this.scrollpos - this.barHeight) * 2)
                     this.CollapseRate += ModSettings.GuiSpeed.getValDouble();
                 else {
                     this.wasopen = false;
                     return;
                 }
-            } else {
-                if (this.CollapseRate > 0)
-                    this.CollapseRate -= ModSettings.GuiSpeed.getValDouble();
-                else
-                    this.CollapseRate = 0;
-            }
-            if (this.category.name().equalsIgnoreCase("Profiles"))
+            } else // Contained we are open
+                this.CollapseRate = this.CollapseRate > 0 ? (int) (this.CollapseRate - ModSettings.GuiSpeed.getValDouble()) : 0;
+            if (this.category.equals(Category.PROFILES)) // Proflies is so small we just dont want a scroll bar
                 this.components.forEach(Component::renderComponent);
             else {
                 glEnable(GL_SCISSOR_TEST);
-                GL11.glScissor(this.x * 2, (mc.displayHeight - ((this.Bottomy + this.y + this.scrollpos) * 2)) + this.CollapseRate, this.width * 2, ((this.Bottomy + this.scrollpos - this.barHeight) * 2) - this.CollapseRate);
+                /*
+                ScaledResolution res = new ScaledResolution(mc);
+                double scaleW = mc.displayWidth / res.getScaledWidth_double();
+                double scaleH = mc.displayHeight / res.getScaledHeight_double();
+
+                 */
+                // (mc.displayHeight - ((this.Bottomy + this.y + this.scrollpos) * 2)) + this.CollapseRate
+                GL11.glScissor((int) (this.x * 2),
+                        (int) (mc.displayHeight - ((this.bottomY + this.y + this.scrollpos) * 2)) + this.CollapseRate,
+                        (int) (this.width * 2),
+                        (int) ((this.bottomY + this.scrollpos - this.barHeight) * 2) - this.CollapseRate);
                 this.components.forEach(Component::renderComponent);
                 glDisable(GL_SCISSOR_TEST);
             }
@@ -175,16 +147,15 @@ public class Frame {
     }
 
     public void handleScrollinput() {
+        if (this.category.equals(Category.HISTORY) || this.category.equals(Category.ONSCREEN) && mc.currentScreen instanceof ClickGui)
+            return;
         int off = this.barHeight;
         for (Component component : this.components) {
             component.setOff(off - (this.barHeight * this.scroll));
             off += component.getHeight();
         }
-        boolean Canscoll = false;
-        off = off - ((  this.barHeight) * this.scroll) ;
-        if (off > this.Bottomy + this.scrollpos)
-            Canscoll = true;
-
+        // WE can scroll if all compenent height plus bar > bottom +scrollpos
+        boolean Canscoll = off - ((this.barHeight) * this.scroll) >= this.bottomY + this.scrollpos;
         int wheel = Mouse.getDWheel();
         if (wheel < 0 && Canscoll)
             this.scroll++;
@@ -192,23 +163,66 @@ public class Frame {
             this.scroll--;
         if (this.scroll < 0)
             this.scroll = 0;
+
+        if ((this.scrollpos < 0 && this.scrollpos > -12) || (this.scrollpos > 0 && this.scrollpos < 12))
+            this.scrollpos = 0;
+
+        if (this.scrollpos < -this.bottomY + this.barHeight)
+            this.scrollpos = -this.bottomY + this.barHeight;
+
+        if (this.scrollpos + this.bottomY > off + this.barHeight - 1)
+            this.setScrollpos(this.scrollpos - this.barHeight);
+
+        if (!((off - (this.barHeight * this.scroll)) > this.bottomY + this.scrollpos - this.barHeight) && this.scroll > 0)
+            this.scroll--;
+
     }
 
-    public void fontSelect(String name, float v, float v1, int i) {
+    public void fontSelect(String name, float x, float y, int color) {
         if (GuiModule.Frame.getValString().equalsIgnoreCase("MC"))
-            mc.fontRenderer.drawStringWithShadow(name, (int) v, (int) v1, i);
+            Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(name, x, y, color);
         else
-            FrameFont.drawStringWithShadow(name, v, v1, i);
+            FrameFont.drawStringWithShadow(name, x, y, color);
     }
 
-    public void refresh() {
+    public void updatePosition(int mouseX, int mouseY) {
+        if (this.isWithinBounds(mouseX, mouseY)) {
+            this.handleScrollinput();
+            this.getComponents().forEach(component -> component.updateComponent(mouseX, mouseY));
+        } else
+            this.getComponents().forEach(component -> component.hovered = false);
+
+        this.getComponents().forEach(Component::runAnimation);
+
+        if (this.isDragging && (!this.category.equals(Category.ONSCREEN) && mc.currentScreen instanceof ClickGui) && !this.category.equals(Category.HISTORY)) {
+            // This is checking for bounds of the screen at either display width or zero
+            this.setX(Math.max(-this.width / 2, Math.min(mouseX - dragX, (mc.displayWidth / 2) - (this.width / 2))));
+            // This is checking for bounds of the screen at either Height width or zero
+            this.setY(Math.max(0, Math.min(mouseY - dragY, mc.displayHeight / 2)));
+        }
         int off = this.barHeight;
-        for (Component comp : this.components) {
-            comp.setOff(off);
-            off += comp.getHeight();
+
+        for (Component component : this.components) {
+            off += component.getHeight();
+        }
+        if (this.isDraggingBot) {
+            if (!(mouseY + 6 > off + this.y + this.barHeight))
+                this.setScrollpos(mouseY - this.dragScrollstop);
+            handleScrollinput();
         }
     }
 
+    public boolean isWithinHeader(int x, int y) {
+        return x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.barHeight;
+    }
+
+    public boolean isWithinFooter(int x, int y) {
+        return x >= this.x && x <= this.x + this.width && y >= this.bottomY + this.scrollpos + this.y && y <= this.bottomY + this.scrollpos + this.barHeight + this.y;
+    }
+
+    public boolean isWithinBounds(int x, int y) {
+        return x >= this.x && x <= this.x + this.width && y >= this.y + this.barHeight && y <= this.y + this.bottomY + ((this.category != Category.PROFILES) ? this.scrollpos : 1000);
+    }
 
     public int getX() {
         return x;
@@ -216,6 +230,10 @@ public class Frame {
 
     public String getName() {
         return this.category.name();
+    }
+
+    public Category getCategory() {
+        return this.category;
     }
 
     public int getY() {
@@ -234,54 +252,41 @@ public class Frame {
         return barHeight;
     }
 
-    public void updatePosition(int mouseX, int mouseY) {
-        if (this.isDragging) {
-            if (!((mouseX - dragX + this.width > mc.displayWidth / 2) || ((mouseX - dragX)) < 0))
-                this.setX(mouseX - dragX);
-
-            if (!(mouseY - dragY + this.barHeight > mc.displayHeight / 2))
-                this.setY(mouseY - dragY);
-        }
-        int off = this.barHeight;
-        for (Component component : this.components) {
-            off += component.getHeight();
-        }
-
-        if (this.isDraggingBot) {
-            if (!(mouseY + 6 > off + this.y + this.barHeight))
-                this.setScrollpos(mouseY - this.dragScrollstop);
-            handleScrollinput();
-        }
-
-        // Bottomy is the static value from top bar to bottom bar not expanded
-
-        if (this.scrollpos + this.Bottomy > off) {
-            this.setScrollpos(this.scrollpos - this.barHeight);
-        }
-        if ((this.scrollpos < 0 && this.scrollpos > -12) || (this.scrollpos > 0 && this.scrollpos < 12)) {
-            this.scrollpos = 0;
-        }
-
-        off = off - (this.barHeight * this.scroll);
-        if (!(off > this.Bottomy + this.scrollpos) && this.scroll > 0) {
-            this.scroll--;
-        }
-
-        if (this.scrollpos < -this.Bottomy + this.barHeight)
-            this.scrollpos = -this.Bottomy + this.barHeight;
-
+    public void setX(int newX) {
+        this.x = newX;
     }
 
-    public boolean isWithinHeader(int x, int y) {
-        return x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.barHeight;
+    public void setY(int newY) {
+        this.y = newY;
     }
 
-    public boolean isWithinFooter(int x, int y) {
-        return x >= this.x && x <= this.x + this.width && y >= this.Bottomy + this.scrollpos + this.y && y <= this.Bottomy + this.scrollpos + this.barHeight + this.y;
+    public void setWidth(int width) {
+        this.width = width;
     }
 
-    public boolean isWithinBounds(int x, int y) {
-        return x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.Bottomy + (!(this.category == Category.PROFILES) ? this.scrollpos : 1000);
+    public void setScrollpos(int NewY) {
+        this.scrollpos = NewY;
     }
 
+    public void setDrag(boolean drag) {
+        this.isDragging = drag;
+    }
+
+    public void setDragBot(boolean drag) {
+        this.isDraggingBot = drag;
+    }
+
+    public boolean isOpen() {
+        return open;
+    }
+
+    public ArrayList<Component> getComponents() {
+        return components;
+    }
+
+    public void setOpen(boolean open) {
+        this.open = open;
+        if (open)
+            this.wasopen = true;
+    }
 }

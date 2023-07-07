@@ -7,36 +7,21 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.opengl.GL11;
 
 import static org.lwjgl.opengl.GL11.GL_BLEND;
 import static org.lwjgl.opengl.GL11.glEnable;
 
 public class Keybind extends Component {
 
-    private boolean hovered;
     private boolean binding;
     public static boolean PublicBinding;
-    private final Button parent;
-    private int offset;
-    private int x;
-    private int y;
-
     private boolean LControl = false;
     private boolean LShift = false;
     private boolean LAlt = false;
-    protected Minecraft mc = Minecraft.getMinecraft();
 
     public Keybind(Button button, int offset) {
         this.parent = button;
-        this.x = button.parent.getX() + button.parent.getWidth();
-        this.y = button.parent.getY() + button.offset;
         this.offset = offset;
-    }
-
-    @Override
-    public void setOff(int newOff) {
-        offset = newOff;
     }
 
     @Override
@@ -44,7 +29,7 @@ public class Keybind extends Component {
         glEnable(GL_BLEND);
         Gui.drawRect(parent.parent.getX() + 2, parent.parent.getY() + offset, parent.parent.getX() + (parent.parent.getWidth()), parent.parent.getY() + offset + 12, this.hovered ? GuiModule.Hover.getcolor() : GuiModule.innercolor.getcolor());
         Gui.drawRect(parent.parent.getX(), parent.parent.getY() + offset, parent.parent.getX() + 2, parent.parent.getY() + offset + 12, 0xA6111111);
-        GL11.glPushMatrix();
+        GlStateManager.pushMatrix();
         StringBuilder Keys = new StringBuilder();
         for (Integer key : this.parent.mod.getKeys()) {
             Keys.append(" ").append(Keyboard.getKeyName(key));
@@ -57,20 +42,15 @@ public class Keybind extends Component {
     @Override
     public void RenderTooltip() {
         if (this.hovered && this.parent.open) {
-            Button.fontSelect("Press End To Clear", 0, (float) (mc.displayHeight / 2.085), -1);
+            Button.fontSelect("Press End To Clear", 0, (float) (Minecraft.getMinecraft().displayHeight / 2.085), -1);
         }
     }
 
-    @Override
-    public void updateComponent(int mouseX, int mouseY) {
-        this.y = this.parent.parent.getY() + this.offset;
-        this.x = this.parent.parent.getX();
-        this.hovered = isMouseOnButton(mouseX, mouseY);
-    }
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int button) {
         if (this.hovered && button == 0 && this.parent.open) {
+            this.parent.mod.settingChanged(ClickType.Keybind);
             this.binding = !this.binding;
             PublicBinding = !PublicBinding;
         }
@@ -103,7 +83,4 @@ public class Keybind extends Component {
         }
     }
 
-    public boolean isMouseOnButton(int x, int y) {
-        return x > this.x && x < this.x + this.parent.parent.getWidth() && y > this.y && y < this.y + this.parent.parent.getBarHeight();
-    }
 }

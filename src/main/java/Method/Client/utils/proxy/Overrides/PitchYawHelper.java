@@ -6,8 +6,8 @@ import org.lwjgl.input.Mouse;
 
 public class PitchYawHelper extends MouseHelper {
 
-    public static boolean Pitch = false;
-    public static boolean Yaw = false;
+    public  boolean Pitch = false;
+    public  boolean Yaw = false;
 
 
     @Override
