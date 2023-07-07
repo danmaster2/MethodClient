@@ -15,6 +15,9 @@ public class MoveOverride extends MovementInputFromOptions {
     }
 
     public static void toggle() {
+        if (mc.player == null)
+            return;
+
         mc.player.movementInput = new MoveOverride(mc.gameSettings);
     }
 
